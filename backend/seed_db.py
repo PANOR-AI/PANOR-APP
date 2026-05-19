@@ -10,7 +10,9 @@ async def seed():
         users = [
             User(email="patient@panor.com", hashed_password=get_password_hash("password"), full_name="Rahul Sharma", role="Patient"),
             User(email="doctor@panor.com", hashed_password=get_password_hash("password"), full_name="Dr. Amit Verma", role="Doctor"),
-            User(email="admin@panor.com", hashed_password=get_password_hash("password"), full_name="Admin", role="Administrator")
+            User(email="admin@panor.com", hashed_password=get_password_hash("password"), full_name="Admin", role="Administrator"),
+            User(email="lab@panor.com", hashed_password=get_password_hash("password"), full_name="Lab Tech", role="Lab Technician")
+
         ]
         db.add_all(users)
         try:
