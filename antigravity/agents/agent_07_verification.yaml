@@ -1,0 +1,91 @@
+# AGENT 07: VERIFICATION & SAFETY AGENT
+# Validate all outputs + auto-generate SOAP notes
+
+apiVersion: antigravity.v1
+kind: Agent
+metadata:
+  id: agent_07_verification
+  name: "Verification & Safety Agent"
+  namespace: panor-clinical
+  version: "1.0"
+
+spec:
+  purpose: "Validate all agent outputs and generate clinical SOAP notes"
+  tier: critical
+  
+  model:
+    provider: google
+    name: gemini-pro
+    temperature: 0.2
+    max_tokens: 2500
+  
+  tools:
+    - id: confidence_validator
+      type: logic_engine
+      operation: threshold_check
+    
+    - id: contradiction_detector
+      type: ai_reasoning
+      prompt: prompts/verification/contradiction_analysis.prompt
+    
+    - id: soap_generator
+      type: ai_reasoning
+      prompt: prompts/verification/soap_generation.prompt
+      max_tokens: 1500
+  
+  memory:
+    type: all_agent_outputs
+    includes: [agent_01, agent_02, agent_03, agent_04, agent_05, agent_06]
+  
+  dependencies: ["all_agents"]
+  
+  workplan_template: |
+    AGENT 07 WORKPLAN:
+    1. Collect outputs from all 6 prior agents
+    2. Validate confidence thresholds:
+       - confidence >= 0.90 → APPROVE (ready for presentation)
+       - 0.70 <= confidence < 0.90 → REVIEW (needs physician review)
+       - confidence < 0.70 → HOLD (no recommendation until input)
+    3. Run contradiction detection:
+       - Check if agents contradict each other
+       - Surface conflicts clearly
+       - Propose resolution (highest confidence wins)
+    4. SOAP Note Generation:
+       - S (Subjective): Extract from intake + patient input
+       - O (Objective): Include risk_level, emergency flags, drug verdict, confidence
+       - A (Assessment): Top differential + reasoning summary
+       - P (Plan): Prescribed meds, lab orders, follow-up schedule
+    5. Create immutable audit log entry
+    6. Decision: APPROVE, REVIEW, or HOLD
+
+  confidence_thresholds:
+    approve: 0.90
+    review: 0.70
+    hold: 0.00
+
+  output_schema:
+    type: object
+    properties:
+      approval_status:
+        type: enum
+        enum: [APPROVE, REVIEW, HOLD]
+      confidence_score:
+        type: float
+      contradictions_found:
+        type: boolean
+      contradiction_details:
+        type: array
+        items: string
+      soap_note:
+        type: object
+        properties:
+          subjective: string
+          objective: string
+          assessment: string
+          plan: string
+          generated_at: timestamp
+          generation_time_ms: integer
+      audit_log_id:
+        type: string
+      physician_review_required:
+        type: boolean

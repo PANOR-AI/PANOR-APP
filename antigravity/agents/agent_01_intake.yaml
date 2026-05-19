@@ -1,0 +1,111 @@
+# AGENT 01: INTAKE INTELLIGENCE AGENT
+# Multimodal input processing → structured clinical objects
+
+apiVersion: antigravity.v1
+kind: Agent
+metadata:
+  id: agent_01_intake
+  name: "Intake Intelligence Agent"
+  namespace: panor-clinical
+  version: "1.0"
+
+spec:
+  purpose: "Transform any patient input into structured clinical object"
+  tier: primary
+  
+  model:
+    provider: google
+    name: gemini-pro
+    temperature: 0.3
+    max_tokens: 2000
+  
+  tools:
+    - id: speech_to_text
+      type: google_api
+      endpoint: "https://speech.googleapis.com/v1"
+      required: false
+      config:
+        auto_language_detection: true
+        supported_languages: [ur, en, hi, pa, ar, roman_urdu]
+    
+    - id: vision_api
+      type: google_api
+      endpoint: "https://vision.googleapis.com/v1"
+      required: false
+      config:
+        features: [text_detection, label_detection, safe_search]
+    
+    - id: document_ai
+      type: google_api
+      endpoint: "https://documentai.googleapis.com/v1"
+      required: false
+      config:
+        processors: [ocr, form_parser, general_document]
+    
+    - id: video_intelligence
+      type: google_api
+      endpoint: "https://videointelligence.googleapis.com/v1"
+      required: false
+      config:
+        features: [frame_detection, label_detection]
+  
+  memory:
+    type: patient_context
+    backend: firestore
+    collection: "patients/{patient_id}/timeline"
+    ttl_hours: 24
+  
+  workplan_template: |
+    AGENT 01 WORKPLAN:
+    1. Detect input language and modality type
+    2. Route to appropriate processing tool:
+       - Voice → Speech-to-Text API (auto language detection)
+       - Image → Vision AI (text + label extraction)
+       - PDF → Document AI (OCR + structure parsing)
+       - Video → Frame extraction + scene analysis
+       - Text → Pass through with language validation
+    3. Extract clinical symptoms from all modalities
+    4. Merge outputs into unified symptom object
+    5. Score severity (CRITICAL / HIGH / NORMAL / LOW)
+    6. Estimate urgency (NORMAL / MONITOR / ESCALATE)
+    7. Flag ambiguities for physician review
+    8. Generate confidence score
+    9. Log Antigravity trace with all tool calls
+
+  error_handling:
+    api_failure: graceful_fallback
+    language_undetected: prompt_user
+    low_confidence: surface_uncertainty
+    timeout_ms: 8000
+
+  output_schema:
+    type: object
+    properties:
+      language_detected:
+        type: string
+        description: "Detected language code (ur, en, hi, pa, ar, etc)"
+      modalities_used:
+        type: array
+        items: enum[voice, text, image, pdf, video]
+      symptoms:
+        type: array
+        items:
+          type: object
+          properties:
+            name: string
+            severity_score: float
+            duration_days: integer
+            onset_time: string
+      severity_score:
+        type: enum
+        enum: [CRITICAL, HIGH, NORMAL, LOW]
+      urgency_estimate:
+        type: enum
+        enum: [NORMAL, MONITOR, ESCALATE]
+      ambiguity_flags:
+        type: array
+        items: string
+      confidence_score:
+        type: float
+        minimum: 0
+        maximum: 1

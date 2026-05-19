@@ -1,0 +1,78 @@
+# AGENT 04: LABORATORY COORDINATION AGENT
+# Generate structured lab work orders with clinical intent
+
+apiVersion: antigravity.v1
+kind: Agent
+metadata:
+  id: agent_04_lab_coordination
+  name: "Laboratory Coordination Agent"
+  namespace: panor-clinical
+  version: "1.0"
+
+spec:
+  purpose: "Convert AI reasoning into structured lab work orders"
+  tier: primary
+  
+  model:
+    provider: google
+    name: gemini-pro
+    temperature: 0.3
+    max_tokens: 2000
+  
+  tools:
+    - id: lab_test_database
+      type: firestore_query
+      collection: "medical_references/lab_tests"
+      index: test_name
+    
+    - id: urgency_classifier
+      type: ai_reasoning
+      prompt: prompts/lab_coordination/urgency_classification.prompt
+  
+  memory:
+    type: clinical_intent
+    includes: [differential_diagnoses, test_history, result_patterns]
+  
+  dependencies: ["agent_02_clinical_reasoning"]
+  
+  workplan_template: |
+    AGENT 04 WORKPLAN:
+    1. Receive differential diagnoses from Agent 02
+    2. For each diagnosis, determine appropriate lab tests:
+       - Query lab_test_database
+       - Filter tests relevant to differential
+    3. Classify urgency for each test:
+       - ROUTINE: Non-urgent diagnostic (72 hours)
+       - URGENT: Needed within 24 hours
+       - STAT: Needed immediately (within 1 hour)
+    4. Set abnormality detection thresholds:
+       - Define what constitutes abnormal for each test
+       - Set escalation thresholds
+    5. Write clinical intent note for lab technician:
+       - Explain why each test was ordered
+       - Reference differential diagnosis
+       - Provide clinical context
+    6. Create structured work order format
+    7. Generate escalation trigger rules
+
+  output_schema:
+    type: object
+    properties:
+      lab_plan:
+        type: object
+        properties:
+          tests:
+            type: array
+            items:
+              type: object
+              properties:
+                test_name: string
+                urgency_label:
+                  type: enum
+                  enum: [ROUTINE, URGENT, STAT]
+                clinical_intent: string
+                abnormality_threshold: float
+                escalation_trigger: string
+          clinical_intent_note:
+            type: string
+            description: "Narrative for lab technician"

@@ -1,0 +1,84 @@
+# AGENT 05: EPIDEMIOLOGY INTELLIGENCE AGENT
+# Detect disease clusters and outbreak patterns
+
+apiVersion: antigravity.v1
+kind: Agent
+metadata:
+  id: agent_05_epidemiology
+  name: "Epidemiology Intelligence Agent"
+  namespace: panor-public-health
+  version: "1.0"
+
+spec:
+  purpose: "Detect outbreak signals and disease clusters"
+  tier: secondary
+  
+  model:
+    provider: google
+    name: gemini-pro
+    temperature: 0.4
+    max_tokens: 1500
+  
+  tools:
+    - id: outbreak_detector
+      type: ai_reasoning
+      prompt: prompts/epidemiology/outbreak_detection.prompt
+    
+    - id: geo_clustering
+      type: google_maps_api
+      endpoint: "https://maps.googleapis.com/maps/api/place"
+    
+    - id: risk_forecaster
+      type: ai_reasoning
+      prompt: prompts/epidemiology/risk_forecast.prompt
+  
+  memory:
+    type: anonymized_aggregate
+    backend: firestore
+    collection: "epidemiology/symptom_clusters"
+    anonymization: true
+  
+  execution_type: async_non_blocking
+  
+  workplan_template: |
+    AGENT 05 WORKPLAN:
+    1. Extract anonymized symptom data (no PII)
+    2. Add geographic location metadata (clinic location, region)
+    3. Aggregate with historical patient symptom data
+    4. Run cluster detection algorithm:
+       - Identify geographic concentration of similar symptoms
+       - Define radius (5km, 10km) and time window (24h, 48h, 7d)
+       - Calculate cluster density
+    5. Check against known outbreak patterns:
+       - Compare symptom clusters with dengue, typhoid, respiratory patterns
+       - Score outbreak probability
+    6. If outbreak probability > threshold (0.70):
+       - Generate outbreak alert
+       - Log to public health dashboard
+       - Notify healthcare administrator
+    7. Generate 48-72 hour risk forecast
+    8. Create forecast explanation
+
+  output_schema:
+    type: object
+    properties:
+      outbreak_detected:
+        type: boolean
+      disease_pattern:
+        type: string
+      cluster_coordinates:
+        type: object
+        properties:
+          latitude: float
+          longitude: float
+          radius_km: float
+          density: float
+      outbreak_probability:
+        type: float
+      alert_level:
+        type: enum
+        enum: [GREEN, YELLOW, RED]
+      forecast_window_hours:
+        type: integer
+      public_health_action_required:
+        type: boolean

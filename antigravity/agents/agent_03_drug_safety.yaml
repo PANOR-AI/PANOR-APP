@@ -1,0 +1,97 @@
+# AGENT 03: DRUG SAFETY GUARDIAN AGENT
+# Hard-block dangerous drug interactions before prescription
+
+apiVersion: antigravity.v1
+kind: Agent
+metadata:
+  id: agent_03_drug_safety
+  name: "Drug Safety Guardian Agent"
+  namespace: panor-clinical
+  version: "1.0"
+
+spec:
+  purpose: "Prevent medication conflicts before reaching patient"
+  tier: primary
+  critical: true
+  
+  model:
+    provider: google
+    name: gemini-pro
+    temperature: 0.1
+    max_tokens: 1500
+  
+  tools:
+    - id: drug_interaction_db
+      type: firestore_query
+      collection: "medical_references/drug_interactions"
+      index: drug_combination
+    
+    - id: contraindication_checker
+      type: ai_reasoning
+      prompt: prompts/drug_safety/contraindication_check.prompt
+    
+    - id: alternative_suggester
+      type: ai_reasoning
+      prompt: prompts/drug_safety/alternative_suggestion.prompt
+  
+  memory:
+    type: medication_history
+    includes: [current_meds, past_meds, allergies, adverse_reactions]
+  
+  trigger: "physician_proposes_medication"
+  
+  workplan_template: |
+    AGENT 03 WORKPLAN:
+    1. Receive proposed medication from physician
+    2. Query patient's current medications from Firestore
+    3. Check drug-drug interactions:
+       - Load interaction database
+       - Cross-reference proposed drug with each current medication
+       - Score interaction severity
+    4. Check contraindications:
+       - Load patient's chronic conditions (diabetes, hypertension, etc)
+       - Load patient's allergies
+       - Cross-reference against proposed drug contraindications
+    5. Verify dosage appropriateness:
+       - Check patient age, weight, renal function
+       - Validate dosage against clinical guidelines
+    6. DECISION LOGIC:
+       - If severe interaction detected → verdict = BLOCK
+         (Generate safe alternative automatically)
+       - If mild interaction detected → verdict = WARN
+         (Alert physician, allow override with reason)
+       - If no conflict → verdict = ALLOW
+         (Pass to next workflow)
+    7. Log all checks with severity reasoning
+    8. If BLOCK: Generate alternative drug suggestion with same clinical effect
+
+  hard_block: true
+
+  output_schema:
+    type: object
+    properties:
+      verdict:
+        type: enum
+        enum: [ALLOW, WARN, BLOCK]
+        description: "Whether to allow, warn about, or block prescription"
+      proposed_drug:
+        type: string
+      current_medications:
+        type: array
+        items: string
+      interaction_found:
+        type: boolean
+      interaction_severity:
+        type: enum
+        enum: [NONE, MILD, MODERATE, SEVERE]
+      contraindication_reason:
+        type: string
+      alternative_suggested:
+        type: object
+        properties:
+          drug_name: string
+          dosage: string
+          rationale: string
+          confidence: float
+      override_required:
+        type: boolean
