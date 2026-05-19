@@ -2,7 +2,8 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://panor:panorpassword@localhost:5432/panor_db")
+# Switched to SQLite since Docker isn't running locally
+DATABASE_URL = "sqlite+aiosqlite:///./panor.db"
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
@@ -18,5 +19,5 @@ async def get_db():
 
 async def init_db():
     async with engine.begin() as conn:
-        # Create all tables (for dev only, in prod use Alembic)
+        # Create all tables
         await conn.run_sync(Base.metadata.create_all)

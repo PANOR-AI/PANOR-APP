@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/custom_buttons.dart';
+import '../../core/auth_service.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   @override
@@ -9,6 +10,22 @@ class AdminHomeScreen extends StatefulWidget {
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _currentIndex = 0;
+  Map<String, dynamic>? _dashboardData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  void _fetchData() async {
+    var data = await AuthService.getDashboard('admin');
+    setState(() {
+      _dashboardData = data;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +42,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ],
         ),
       ),
-      body: _buildBody(),
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -44,22 +61,27 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   Widget _buildBody() {
     if (_currentIndex == 0) {
+      int totalPatients = _dashboardData?['metrics']?['total_patients'] ?? 0;
+      int activeDoctors = _dashboardData?['metrics']?['active_doctors'] ?? 0;
+      var activities = _dashboardData?['recent_activities'] as List? ?? [];
+
       return ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Row(
-            children: const [
-              Expanded(child: DashboardCard(title: 'Total Patients', value: '1,234', icon: Icons.local_hospital, color: Color(0xFF0066FF))),
-              SizedBox(width: 16),
-              Expanded(child: DashboardCard(title: 'Active Doctors', value: '234', icon: Icons.medical_services, color: Color(0xFF00C853))),
+            children: [
+              Expanded(child: DashboardCard(title: 'Total Patients', value: '$totalPatients', icon: Icons.local_hospital, color: const Color(0xFF0066FF))),
+              const SizedBox(width: 16),
+              Expanded(child: DashboardCard(title: 'Active Doctors', value: '$activeDoctors', icon: Icons.medical_services, color: const Color(0xFF00C853))),
             ],
           ),
           const SizedBox(height: 32),
           Text('Recent Activities', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          _buildActivityRow('New Doctor Registered', 'Dr. Neha Singh', '2 mins ago'),
-          const SizedBox(height: 12),
-          _buildActivityRow('New Patient Registered', 'Rahul Sharma', '5 mins ago'),
+          ...activities.map((act) => Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: _buildActivityRow(act['title'], act['desc'], act['time']),
+          )).toList(),
         ],
       );
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/custom_buttons.dart';
+import '../../core/auth_service.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
   @override
@@ -9,9 +10,27 @@ class DoctorHomeScreen extends StatefulWidget {
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   int _currentIndex = 0;
+  Map<String, dynamic>? _dashboardData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  void _fetchData() async {
+    var data = await AuthService.getDashboard('doctor');
+    setState(() {
+      _dashboardData = data;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    int patientsToday = _dashboardData?['metrics']?['patients_today'] ?? 0;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -21,11 +40,11 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Hello, Dr. Verma 🩺', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text('You have 12 patients today', style: GoogleFonts.inter(fontSize: 14, color: Colors.white70)),
+            Text('You have $patientsToday patients today', style: GoogleFonts.inter(fontSize: 14, color: Colors.white70)),
           ],
         ),
       ),
-      body: _buildBody(),
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -44,22 +63,27 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
 
   Widget _buildBody() {
     if (_currentIndex == 0) {
+      int patientsToday = _dashboardData?['metrics']?['patients_today'] ?? 0;
+      int aptCount = _dashboardData?['metrics']?['appointments'] ?? 0;
+      var appointments = _dashboardData?['appointments'] as List? ?? [];
+
       return ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Row(
-            children: const [
-              Expanded(child: DashboardCard(title: 'Patients Today', value: '12', icon: Icons.people_outline, color: Color(0xFF00C853))),
-              SizedBox(width: 16),
-              Expanded(child: DashboardCard(title: 'Appointments', value: '05', icon: Icons.calendar_month, color: Color(0xFF0066FF))),
+            children: [
+              Expanded(child: DashboardCard(title: 'Patients Today', value: '$patientsToday', icon: Icons.people_outline, color: const Color(0xFF00C853))),
+              const SizedBox(width: 16),
+              Expanded(child: DashboardCard(title: 'Appointments', value: '0$aptCount', icon: Icons.calendar_month, color: const Color(0xFF0066FF))),
             ],
           ),
           const SizedBox(height: 32),
           Text('Today\'s Appointments', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          _buildPatientCard('Rahul Sharma', '10:00 AM', 'Cardiology', 'https://i.pravatar.cc/150?img=11'),
-          const SizedBox(height: 12),
-          _buildPatientCard('Priya Patel', '11:15 AM', 'Cardiology', 'https://i.pravatar.cc/150?img=5'),
+          ...appointments.map((apt) => Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: _buildPatientCard(apt['name'], apt['time'], apt['type'], apt['image_url']),
+          )).toList(),
         ],
       );
     }
