@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/custom_buttons.dart';
+import '../../core/auth_service.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   @override
@@ -9,6 +10,22 @@ class PatientHomeScreen extends StatefulWidget {
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
   int _currentIndex = 0;
+  Map<String, dynamic>? _dashboardData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  void _fetchData() async {
+    var data = await AuthService.getDashboard('patient');
+    setState(() {
+      _dashboardData = data;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +41,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             Text('How are you feeling today?', style: GoogleFonts.inter(fontSize: 14, color: Colors.white70)),
           ],
         ),
-        actions: [
-          IconButton(icon: const Icon(Icons.notifications_none, color: Colors.white), onPressed: () {}),
-          const CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'), radius: 18),
-          const SizedBox(width: 16),
-        ],
       ),
-      body: _buildBody(),
+      body: _isLoading ? const Center(child: CircularProgressIndicator()) : _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -48,29 +60,36 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   Widget _buildBody() {
     if (_currentIndex == 0) {
+      String bp = _dashboardData?['health_summary']?['blood_pressure'] ?? 'N/A';
+      String hr = _dashboardData?['health_summary']?['heart_rate'] ?? 'N/A';
+      var appointments = _dashboardData?['appointments'] as List? ?? [];
+
       return ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Text('Health Summary', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           Row(
-            children: const [
-              Expanded(child: DashboardCard(title: 'Blood Pressure', value: '120/80', icon: Icons.favorite, color: Colors.red)),
-              SizedBox(width: 16),
-              Expanded(child: DashboardCard(title: 'Heart Rate', value: '72 bpm', icon: Icons.monitor_heart, color: Colors.orange)),
+            children: [
+              Expanded(child: DashboardCard(title: 'Blood Pressure', value: bp, icon: Icons.favorite, color: Colors.red)),
+              const SizedBox(width: 16),
+              Expanded(child: DashboardCard(title: 'Heart Rate', value: hr, icon: Icons.monitor_heart, color: Colors.orange)),
             ],
           ),
           const SizedBox(height: 32),
           Text('Upcoming Appointments', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          _buildAppointmentCard(),
+          if (appointments.isNotEmpty)
+            _buildAppointmentCard(appointments[0])
+          else
+            Text('No appointments scheduled.', style: GoogleFonts.inter(color: Colors.grey)),
         ],
       );
     }
     return Center(child: Text('Coming Soon', style: GoogleFonts.inter(fontSize: 20, color: Colors.grey)));
   }
 
-  Widget _buildAppointmentCard() {
+  Widget _buildAppointmentCard(dynamic apt) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -80,14 +99,14 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       ),
       child: Row(
         children: [
-          const CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=33'), radius: 24),
+          CircleAvatar(backgroundImage: NetworkImage(apt['image_url'] ?? ''), radius: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Dr. Amit Verma', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('Cardiologist • 24 May 2024, 10:00 AM', style: GoogleFonts.inter(fontSize: 14, color: Colors.grey)),
+                Text(apt['doctor_name'] ?? '', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('${apt['specialty']} • ${apt['datetime']}', style: GoogleFonts.inter(fontSize: 14, color: Colors.grey)),
               ],
             ),
           ),
