@@ -1,26 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'screens/auth/splash_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'app/app.dart';
 
 void main() {
-  runApp(const PanorApp());
-}
-
-class PanorApp extends StatelessWidget {
-  const PanorApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PANOR',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        textTheme: GoogleFonts.interTextTheme(
-          Theme.of(context).textTheme,
-        ),
-      ),
-      home: SplashScreen(),
-    );
-  }
+  runApp(
+    const ProviderScope(
+      child: PanorApp(),
+    ),
+  );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_buttons.dart';
 
@@ -29,7 +30,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               backgroundColor: widget.color,
             ),
           );
-          Navigator.pop(context);
+          context.pop();
         }
       });
     }

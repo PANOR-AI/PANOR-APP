@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_buttons.dart';
 import '../../core/auth_service.dart';
@@ -21,6 +22,11 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   bool _showRedAlert = false;
   String _selectedPatient = "Rahul Sharma";
   
+  bool _isSafetyOverrideAuthorized = false;
+  final TextEditingController _overrideReasonController = TextEditingController(
+    text: "Patient requires short-term anti-inflammatory therapy; SpO2 & BP to be monitored hourly.",
+  );
+
   // SOAP Draft Editing State
   final TextEditingController _subjectiveController = TextEditingController(
     text: "Patient presents with mild chest discomfort and fatigue. Describes symptom onset as gradual over the past 24 hours. Admits to slight dyspnea during moderate physical exertion. Speaks Roman Urdu: 'Mujhe kal se halka bukhar hai aur thakan mehsoos ho rahi hai.'",
@@ -97,7 +103,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
             onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              context.go('/role-selection');
             },
           )
         ],
@@ -188,7 +194,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         ...appointments.map((apt) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: _buildPatientQueueCard(apt['name'], apt['time'], apt['type'], apt['image_url']),
-            )).toList(),
+            )),
       ],
     );
   }
@@ -232,15 +238,31 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
-          _buildSoapField('Subjective (Patient Narrative & Translation)', _subjectiveController),
+          _buildSoapField(
+            'Subjective (Patient Narrative & Translation)', 
+            _subjectiveController,
+            "Intake translated from Roman Urdu: 'Mujhe kal se halka bukhar hai...' (Since yesterday I have a mild fever and fatigue. Admits to atypical chest discomfort).",
+          ),
           const SizedBox(height: 16),
-          _buildSoapField('Objective (Vitals & Document OCR Extracted)', _objectiveController),
+          _buildSoapField(
+            'Objective (Vitals & Document OCR Extracted)', 
+            _objectiveController,
+            "Document OCR & Vitals Extracted: Sinus rhythm with mild non-specific ST changes. SpO2: 99%, BP: 120/80 mmHg.",
+          ),
           const SizedBox(height: 16),
-          _buildSoapField('Assessment (Differential Diagnoses)', _assessmentController),
+          _buildSoapField(
+            'Assessment (Differential Diagnoses)', 
+            _assessmentController,
+            "Google Antigravity Ranked Diagnoses: 1. Atypical Chest Pain (92% confidence), 2. Hypertension. Recommended to rule out acute ischemia.",
+          ),
           const SizedBox(height: 16),
-          _buildSoapField('Plan (Actionable Prescriptions & Lab tests)', _planController),
+          _buildSoapField(
+            'Plan (Actionable Prescriptions & Lab tests)', 
+            _planController,
+            "Pre-filled Laboratory & Meds: ordered STAT Lipid Profile, CBC. Conflicted Meds: NSAIDs vs Aspirin flagged.",
+          ),
           const SizedBox(height: 32),
-          _buildSafetyOverrideCard(),
+          _buildSafetyNodeDiagram(),
           const SizedBox(height: 32),
           PrimaryButton(
             text: 'Sign & Lock SOAP Ledger',
@@ -343,76 +365,317 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildSoapField(String label, TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          maxLines: null,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.all(16),
-          ),
-          style: GoogleFonts.inter(fontSize: 14, height: 1.4),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSafetyOverrideCard() {
+  Widget _buildSoapField(String label, TextEditingController controller, String aiSuggestionText) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.warningLight,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.borderLight, width: 1.5),
+        boxShadow: AppColors.cardShadow,
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.gpp_maybe_rounded, color: AppColors.warning, size: 28),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.brandPurple.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.brandPurple.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check_circle_rounded, size: 12, color: AppColors.brandPurple),
+                    const SizedBox(width: 4),
+                    Text(
+                      'AI Suggestion',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.brandPurple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.brandPurple.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.brandPurple.withValues(alpha: 0.1)),
+            ),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Drug Safety Interlock Triggered',
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Agent 03 has flagged potential interaction between newly drafted pain suppressants and existing Cardioprotective Aspirin regimen. A formal override justification is required to publish.',
-                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
-                ),
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Physician digital override verified.'),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.lock_open_rounded, size: 18),
-                  label: const Text('Publish Safety Override Reason'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.warning,
-                    textStyle: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                const Icon(Icons.psychology_outlined, size: 18, color: AppColors.brandPurple),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    aiSuggestionText,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
             ),
-          )
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: controller,
+            maxLines: null,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.doctorPrimary, width: 1.5),
+              ),
+              filled: true,
+              fillColor: AppColors.background,
+              contentPadding: const EdgeInsets.all(16),
+            ),
+            style: GoogleFonts.inter(fontSize: 14, height: 1.4, color: AppColors.textPrimary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSafetyNodeDiagram() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _isSafetyOverrideAuthorized
+            ? AppColors.success.withValues(alpha: 0.04)
+            : AppColors.emergencyRed.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: _isSafetyOverrideAuthorized
+              ? AppColors.success.withValues(alpha: 0.3)
+              : AppColors.emergencyRed.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _isSafetyOverrideAuthorized ? Icons.gpp_good_rounded : Icons.gpp_maybe_rounded,
+                color: _isSafetyOverrideAuthorized ? AppColors.success : AppColors.emergencyRed,
+                size: 26,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Clinical Interlock: Agent 03 Drug Safety Guardian',
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Node Diagram
+          Center(
+            child: Container(
+              height: 110,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Node 1: Aspirin
+                  _buildMedNode('Aspirin\n75mg', 'REGIMEN', AppColors.success, Icons.heart_broken_outlined),
+                  
+                  // Link with warning
+                  Expanded(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          height: 2,
+                          color: _isSafetyOverrideAuthorized ? AppColors.success : AppColors.emergencyRed,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _isSafetyOverrideAuthorized ? AppColors.success : AppColors.emergencyRed,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _isSafetyOverrideAuthorized ? Icons.lock_open_rounded : Icons.block_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Node 2: Ibuprofen
+                  _buildMedNode('Ibuprofen\n400mg', 'DRAFTED', AppColors.emergencyRed, Icons.warning_amber_rounded),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          Text(
+            'CRITICAL CONTRAINDICATION:',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: _isSafetyOverrideAuthorized ? AppColors.success : AppColors.emergencyRed,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Co-administration of NSAIDs (Ibuprofen) blocks the cardioprotective antiplatelet effect of low-dose Aspirin. Risk profile: High cardiovascular hazard.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          
+          // Manual Override Toggle
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Authorize Clinical Override',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Requires clinical reason and digital signature.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: _isSafetyOverrideAuthorized,
+                activeThumbColor: AppColors.success,
+                activeTrackColor: AppColors.success.withValues(alpha: 0.5),
+                onChanged: (val) {
+                  setState(() {
+                    _isSafetyOverrideAuthorized = val;
+                  });
+                },
+              ),
+            ],
+          ),
+          
+          if (_isSafetyOverrideAuthorized) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Override Justification Log (Immutable)',
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _overrideReasonController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.all(12),
+              ),
+              style: GoogleFonts.inter(fontSize: 13),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMedNode(String title, String stateText, Color color, IconData icon) {
+    return Container(
+      width: 90,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              stateText,
+              style: GoogleFonts.inter(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
         ],
       ),
     );

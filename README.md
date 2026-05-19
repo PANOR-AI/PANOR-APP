@@ -58,104 +58,115 @@ PANOR does not use a single "chatbot". Instead, it orchestrates **7 dedicated di
 
 ---
 
-## 🚀 Easy Step-by-Step Setup Guide (For Non-Tech & Tech Alike)
+## 📂 Modular System Documentation
 
-Follow these simple steps to get both the **Backend Engine** and the **Frontend Web Portal** running on your local machine.
+To make the platform highly accessible for both medical administrators and software engineers, we have compiled dedicated, deep-dive documentation inside each module directory:
+
+*   💾 **[FastAPI Backend & Database Manual](file:///d:/PANOR/PANOR-APP/backend/README.md)** — Explains SQLAlchemy, SQLite models, JWT token handling, local seeding, Swagger endpoints, and Docker deployment.
+*   🎨 **[Flutter Web & Mobile Frontend Manual](file:///d:/PANOR/PANOR-APP/flutter_app/README.md)** — Explains typography properties, component architecture, the custom Clinical Precision theme, and local compiling.
+*   🧠 **[Google Antigravity & YAML Configuration Manual](file:///d:/PANOR/PANOR-APP/antigravity/README.md)** — Details the 7-Agent Core workflow, fallback reasoning templates, and mock trace triggers.
+
+---
+
+## 🚀 Easy Step-by-Step Setup Guide (For Everyone)
+
+Follow these simple, numbered steps to get both the **Backend API** and the **Frontend Web Portal** running on your local computer.
 
 ### Prerequisites
-Make sure you have [Python](https://www.python.org/downloads/) (version 3.10 or higher) and [Flutter](https://docs.flutter.dev/get-started/install) installed on your machine.
+Make sure your computer has the following tools installed:
+*   [Python](https://www.python.org/downloads/) (version 3.10 or higher)
+*   [Flutter SDK](https://docs.flutter.dev/get-started/install) (to compile/run frontend screens)
 
 ---
 
-### Step 1: Boot Up the Backend API
+### Step 1: Start the Backend API Server
 
-1. Open your terminal/command prompt and navigate to the project directory:
-   ```bash
-   cd d:\PANOR\PANOR-APP\backend
-   ```
-2. Create a virtual environment (this keeps the project dependencies isolated and clean):
-   ```bash
-   python -m venv venv
-   ```
-3. Activate the virtual environment:
-   - **Windows (Command Prompt):**
-     ```cmd
-     .\venv\Scripts\activate.bat
-     ```
-   - **Windows (PowerShell):**
-     ```powershell
-     .\venv\Scripts\activate.ps1
-     ```
-   - **Mac/Linux:**
-     ```bash
-     source venv/bin/activate
-     ```
-4. Install all required dependencies with one command:
-   ```bash
-   pip install fastapi uvicorn sqlalchemy aiosqlite python-jose[cryptography] bcrypt pydantic email-validator python-multipart
-   ```
-5. Seed the database with the pre-configured mock users (Patient, Doctor, Admin):
-   ```bash
-   python seed_db.py
-   ```
-   *You should see the message: `Database seeded with test users!`*
-6. Start the local server:
-   ```bash
-   python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-   ```
-   *Your backend is now live at `http://localhost:8000`! You can visit `http://localhost:8000/docs` to see the live interactive API room.*
-
----
-
-### Step 2: Boot Up the Frontend Web Portal
-
-Open a **new, separate terminal window** and run these commands:
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd d:\PANOR\PANOR-APP\flutter_app
-   ```
-2. Build the optimized web application:
-   ```bash
-   flutter build web
-   ```
-3. Spin up a simple local server to display the build:
-   ```bash
-   python -m http.server 8081 --directory build/web
-   ```
-4. Open your favorite web browser and go to:
-   **[http://localhost:8081](http://localhost:8081)**
+1.  Open your terminal/command prompt and navigate to the backend folder:
+    ```bash
+    cd d:\PANOR\PANOR-APP\backend
+    ```
+2.  Create an isolated sandbox environment (this ensures clean installation):
+    *   **Windows (Command Prompt / PowerShell):**
+        ```cmd
+        python -m venv venv
+        ```
+    *   **Mac / Linux:**
+        ```bash
+        python3 -m venv venv
+        ```
+3.  Activate the environment:
+    *   **Windows (Command Prompt):**
+        ```cmd
+        .\venv\Scripts\activate.bat
+        ```
+    *   **Windows (PowerShell):**
+        ```powershell
+        .\venv\Scripts\activate.ps1
+        ```
+    *   **Mac / Linux:**
+        ```bash
+        source venv/bin/activate
+        ```
+    *(You should see `(venv)` appear on the left side of your prompt!)*
+4.  Install the backend framework software packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  Seed the database with pre-made clinical profiles (Rahul Sharma, Dr. Amit Verma):
+    ```bash
+    python seed_db.py
+    ```
+    *Success Message: `Database seeded with test users!`*
+6.  Launch the live backend server:
+    ```bash
+    python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ```
+    *Your API engine is now running at `http://localhost:8000`! View interactive schemas at `http://localhost:8000/docs`.*
 
 ---
 
-## 🧑‍⚕️ How to Use & Test (Interactive Demo Scenarios)
+### Step 2: Start the Frontend Web Portal
 
-Once you open the portal, the **Splash Screen** will load and transition to the **Role Selection** screen. Try logging in with the pre-seeded accounts:
+Open a **new, separate terminal window** and run these commands to start the user interface:
 
-### 1. Test as a Doctor (Dr. Amit Verma)
-- **Role to Select:** Doctor
-- **Email:** `doctor@panor.com`
-- **Password:** `password`
-- **What to Observe:** The app connects directly to the FastAPI server, validates your login, returns a JWT token, and dynamically loads the **Doctor Dashboard**. You will see:
-  - Total active patients (12) and today's appointments (5).
-  - An interactive appointment list displaying live database records (Rahul Sharma at 10:00 AM, Priya Patel at 11:15 AM).
+1.  Navigate to the frontend folder:
+    ```bash
+    cd d:\PANOR\PANOR-APP\flutter_app
+    ```
+2.  Fetch frontend library packages:
+    ```bash
+    flutter pub get
+    ```
+3.  Compile the release bundle:
+    ```bash
+    flutter build web --release
+    ```
+4.  Spin up a lightweight server to display the portal:
+    ```bash
+    python -m http.server 8081 --directory build/web
+    ```
+5.  Open your browser and navigate directly to the dashboard:
+    **[http://localhost:8081](http://localhost:8081)**
 
-### 2. Test as a Patient (Rahul Sharma)
-- **Role to Select:** Patient
-- **Email:** `patient@panor.com`
-- **Password:** `password`
-- **What to Observe:** The system authenticates and loads the **Patient Health Portal**. You will view your recorded vitals (Blood Pressure: `120/80`, Heart Rate: `72 bpm`) and upcoming clinical appointments fetched in real-time from the backend.
+---
 
-### 3. Test as an Administrator
-- **Role to Select:** Administrator
-- **Email:** `admin@panor.com`
-- **Password:** `password`
-- **What to Observe:** Displays the **Operational Control Center**. You will see live statistics of total users, patient/doctor ratios, and a feed of recent activities occurring within the network.
+## 🧑‍⚕️ How to Log In & Test (Interactive Demo Profiles)
+
+Try logging in with these pre-seeded profiles to explore different operational perspectives:
+
+| Role to Select | Pre-seeded Email | Password | What You Will Experience |
+| :--- | :--- | :--- | :--- |
+| **Doctor** | `doctor@panor.com` | `password` | **Clinical Copilot Dashboard**: Review differential diagnosis lists, safety warning triggers, edit pre-filled clinical SOAP notes, and sign entries digitally. |
+| **Patient** | `patient@panor.com` | `password` | **Patient Portal**: Monitor dynamic vitals trends, access immunization ledger records, and submit voice/text symptoms using the Roman Urdu/English translation assistant. |
+| **Lab Technician** | `lab@panor.com` | `password` | **STAT Pathology Queue**: Access incoming specimen accession lists, scan test barcodes, input troponin levels, and release verified records. |
+| **Administrator** | `admin@panor.com` | `password` | **System Control Room**: View regional spatial epidemiology maps, track system latencies, and scan audit streams. |
 
 ---
 
 ## 🛡️ Clinical Safety Policies (Our Human-In-The-Loop Promise)
-To ensure highest standards of medical safety, PANOR integrates strict compliance safeguards:
-- **Emergency Hard Stops:** If a patient submits high-risk terms (chest pain, dyspnea), the system halts automated operations and triggers an orange/red visual banner, prompting human triage.
-- **Drug-Safety Hard-Block:** Standard blocks (e.g. clashing medications) cannot be bypassed unless a physician explicitly reviews and logs a clinical override.
-- **Draft SOAP Notes:** All SOAP note entries are editable drafts, requiring a physician's digital signature before committing to the append-only permanent timeline.
+
+To ensure the highest standards of patient safety, PANOR implements three major guardrails:
+*   **Emergency Banners**: Critical vital alerts (e.g., HR > 130 bpm) or high-risk patient terms trigger immediate red triage notifications, halting automated queues.
+*   **Safety Lockouts**: Drug safety warning conflicts must be manually reviewed and clinically overridden by a certified physician before confirmation.
+*   **Immutable Draft Ledgers**: Generated SOAP notes remain as drafts and must receive a direct physician digital signature before commit.
+

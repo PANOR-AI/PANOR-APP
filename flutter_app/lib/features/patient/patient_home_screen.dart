@@ -1,10 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_buttons.dart';
 import '../../core/auth_service.dart';
+import 'voice_input_screen.dart';
+import 'upload_report_screen.dart';
+import 'ai_assistant_screen.dart';
+import 'patient_timeline_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   const PatientHomeScreen({super.key});
@@ -61,7 +66,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     try {
       // Connect to backend start consultation API with simulated clinical reasoning
       await http.post(
-        Uri.parse('http://192.168.100.183:8000/api/consultation/start'),
+        Uri.parse('http://localhost:8000/api/consultation/start'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'patient_id': 'patient_01',
@@ -135,7 +140,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
             onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              context.go('/role-selection');
             },
           )
         ],
@@ -230,6 +235,54 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 color: Colors.teal,
                 subtitle: 'Healthy',
               ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        Text(
+          'Clinical Quick Actions',
+          style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.35,
+          children: [
+            _buildQuickActionCard(
+              context,
+              'AI Intake Assistant',
+              'Chat with AI in Roman Urdu/English',
+              Icons.psychology_outlined,
+              AppColors.patientPrimary,
+              () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AiAssistantScreen())),
+            ),
+            _buildQuickActionCard(
+              context,
+              'Voice symptom intake',
+              'Record symptoms with live waveform',
+              Icons.mic_none_rounded,
+              AppColors.doctorPrimary,
+              () => Navigator.push(context, MaterialPageRoute(builder: (context) => const VoiceInputScreen())),
+            ),
+            _buildQuickActionCard(
+              context,
+              'OCR report upload',
+              'Extract medical metrics from PDF',
+              Icons.cloud_upload_outlined,
+              AppColors.labPrimary,
+              () => Navigator.push(context, MaterialPageRoute(builder: (context) => const UploadReportScreen())),
+            ),
+            _buildQuickActionCard(
+              context,
+              'Secure clinical ledger',
+              'View chronological medical timeline',
+              Icons.history_edu_rounded,
+              AppColors.brandIndigo,
+              () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientTimelineScreen())),
             ),
           ],
         ),
@@ -608,6 +661,71 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
           Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard(
+    BuildContext context,
+    String title,
+    String desc,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderLight, width: 1.5),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      desc,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

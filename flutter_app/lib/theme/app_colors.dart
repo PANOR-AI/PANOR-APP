@@ -8,7 +8,7 @@ class AppColors {
   AppColors._();
 
   // ─── Brand Colors ──────────────────────────────────────────────
-  static const Color brandIndigo = Color(0xFF1E1B4B);
+  static const Color brandIndigo = Color(0xFF312E81);
   static const Color brandPurple = Color(0xFF7C3AED);
   static const Color brandBlue = Color(0xFF3B82F6);
   static const Color brandViolet = Color(0xFF8B5CF6);
@@ -22,7 +22,7 @@ class AppColors {
 
   // ─── Text ─────────────────────────────────────────────────────
   static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textSecondary = Color(0xFF475569);
   static const Color textMuted = Color(0xFF94A3B8);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textOnDark = Color(0xFFF8FAFC);
@@ -33,7 +33,7 @@ class AppColors {
   static const Color divider = Color(0xFFE2E8F0);
 
   // ─── Semantic Colors ──────────────────────────────────────────
-  static const Color success = Color(0xFF10B981);
+  static const Color success = Color(0xFF059669);
   static const Color successLight = Color(0xFFD1FAE5);
   static const Color warning = Color(0xFFF59E0B);
   static const Color warningLight = Color(0xFFFEF3C7);

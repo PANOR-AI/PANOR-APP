@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_buttons.dart';
-import '../patient/patient_home_screen.dart';
-import '../doctor/doctor_home_screen.dart';
-import '../admin/admin_home_screen.dart';
-// Note: We will create the Lab Technican home screen soon.
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
@@ -37,34 +34,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         setState(() => _isLoading = false);
         // Route based on role
         if (widget.role == 'Patient') {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => PatientHomeScreen()),
-            (route) => false,
-          );
+          context.go('/patient/home');
         } else if (widget.role == 'Doctor') {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => DoctorHomeScreen()),
-            (route) => false,
-          );
-        } else if (widget.role == 'Administrator') {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => AdminHomeScreen()),
-            (route) => false,
-          );
+          context.go('/doctor/home');
+        } else if (widget.role == 'Administrator' || widget.role == 'Admin') {
+          context.go('/admin/home');
+        } else if (widget.role == 'Lab Technician') {
+          context.go('/lab/home');
         } else {
-          // Lab Technician routing
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (_) => Scaffold(
-                body: Center(child: Text('Lab Technician Dashboard Coming Soon')),
-              ),
-            ),
-            (route) => false,
-          );
+          // Fallback
+          context.go('/patient/home');
         }
       }
     });

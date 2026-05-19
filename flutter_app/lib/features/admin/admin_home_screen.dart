@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_buttons.dart';
 import '../../core/auth_service.dart';
@@ -66,7 +67,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
             onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              context.go('/role-selection');
             },
           )
         ],
@@ -168,7 +169,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         ...activities.map((act) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: _buildActivityRow(act['title'], act['desc'], act['time']),
-            )).toList(),
+            )),
       ],
     );
   }

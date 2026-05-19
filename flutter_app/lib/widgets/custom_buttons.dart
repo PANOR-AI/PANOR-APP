@@ -10,13 +10,13 @@ class PrimaryButton extends StatelessWidget {
   final IconData? icon;
 
   const PrimaryButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.color,
     this.isLoading = false,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -78,12 +78,12 @@ class SecondaryButton extends StatelessWidget {
   final IconData? icon;
 
   const SecondaryButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.color,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -135,13 +135,13 @@ class DashboardCard extends StatelessWidget {
   final String? subtitle;
 
   const DashboardCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
     this.subtitle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,14 +212,14 @@ class GlassContainer extends StatelessWidget {
   final Color? borderColor;
 
   const GlassContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.width,
     this.height,
     this.padding,
     this.borderRadius = 24.0,
     this.borderColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

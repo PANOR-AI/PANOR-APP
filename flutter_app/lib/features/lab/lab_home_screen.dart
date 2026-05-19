@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_buttons.dart';
 
@@ -12,7 +13,7 @@ class LabHomeScreen extends StatefulWidget {
 
 class _LabHomeScreenState extends State<LabHomeScreen> {
   int _currentIndex = 0;
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   // Lab Queue state
   final List<Map<String, dynamic>> _labTests = [
@@ -78,7 +79,7 @@ class _LabHomeScreenState extends State<LabHomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
             onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              context.go('/role-selection');
             },
           )
         ],
@@ -130,7 +131,7 @@ class _LabHomeScreenState extends State<LabHomeScreen> {
           style: GoogleFonts.inter(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 24),
-        ..._labTests.map((test) => _buildTestQueueCard(test)).toList(),
+        ..._labTests.map((test) => _buildTestQueueCard(test)),
       ],
     );
   }

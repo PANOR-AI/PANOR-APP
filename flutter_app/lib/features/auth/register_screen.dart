@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/custom_buttons.dart';
-import 'otp_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   final String role;
@@ -30,16 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
           setState(() => _isLoading = false);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OtpVerificationScreen(
-                email: _emailController.text,
-                role: widget.role,
-                color: widget.color,
-              ),
-            ),
-          );
+          context.push('/otp?email=${Uri.encodeComponent(_emailController.text)}&role=${Uri.encodeComponent(widget.role)}');
         }
       });
     }

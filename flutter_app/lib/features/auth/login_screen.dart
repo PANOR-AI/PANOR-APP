@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/custom_buttons.dart';
 import '../../core/auth_service.dart';
 import '../../theme/app_colors.dart';
-import '../patient/patient_home_screen.dart';
-import '../doctor/doctor_home_screen.dart';
-import '../admin/admin_home_screen.dart';
-import '../lab/lab_home_screen.dart';
-import 'register_screen.dart';
-import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final String role;
@@ -61,29 +56,13 @@ class _LoginScreenState extends State<LoginScreen> {
       
       // Successfully authenticated
       if (widget.role == 'Patient') {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => PatientHomeScreen()),
-          (r) => false,
-        );
+        context.go('/patient/home');
       } else if (widget.role == 'Doctor') {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => DoctorHomeScreen()),
-          (r) => false,
-        );
+        context.go('/doctor/home');
       } else if (widget.role == 'Lab Technician') {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => LabHomeScreen()),
-          (r) => false,
-        );
+        context.go('/lab/home');
       } else {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => AdminHomeScreen()),
-          (r) => false,
-        );
+        context.go('/admin/home');
       }
     } else {
       if (!mounted) return;
@@ -208,12 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ForgotPasswordScreen(color: widget.color),
-                          ),
-                        );
+                        context.push('/forgot-password?role=${widget.role}');
                       },
                       child: Text(
                         'Forgot Password?',
@@ -242,12 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RegisterScreen(role: widget.role, color: widget.color),
-                            ),
-                          );
+                          context.push('/register?role=${widget.role}');
                         },
                         child: Text(
                           'Register',
