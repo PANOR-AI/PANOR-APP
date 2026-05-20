@@ -60,7 +60,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
         if (isCardiacSuspicion) {
           _messages.add({
             'sender': 'ai',
-            'text': "⚠️ **CRITICAL CLINICAL OBSERVATION DETECTED**\n\nI have detected symptoms matching potential cardiovascular distress (Chest discomfort/pain). \n\n**Action Taken:**\n- Alerted **Dr. Amit Verma** via STAT emergency pipeline.\n- Order pre-authorized: **Lipid Profile STAT & ECG**.\n\n*Please remain seated and avoid physical strain. A clinical member has been notified.*",
+            'text': "⚠️ **CRITICAL CLINICAL OBSERVATION DETECTED**\n\nI have detected symptoms matching potential cardiovascular distress (Chest discomfort/pain). \n\n**Action Taken:**\n- Alerted **Dr. Fatima Hassan** via STAT emergency pipeline.\n- Order pre-authorized: **Lipid Profile STAT & ECG**.\n\n*Please remain seated and avoid physical strain. A clinical member has been notified.*",
             'time': 'Just now',
             'isAlert': true,
             'confidence': '96.2%',
@@ -68,7 +68,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
         } else {
           _messages.add({
             'sender': 'ai',
-            'text': "I have logged your symptoms of mild discomfort and fatigue. \n\n**Analysis (Agent 02):**\n- Core translation: 'Patient experiencing exhaustion over 24-hour cycle.'\n- Clinical index: Outbreak baseline matching viral trends is low (2.4%).\n\nWould you like me to book a general checkup consultation with Dr. Amit Verma?",
+            'text': "I have logged your symptoms of mild discomfort and fatigue. \n\n**Analysis (Agent 02):**\n- Core translation: 'Patient experiencing exhaustion over 24-hour cycle.'\n- Clinical index: Outbreak baseline matching viral trends is low (2.4%).\n\nWould you like me to book a general checkup consultation with Dr. Fatima Hassan?",
             'time': 'Just now',
             'confidence': '91.8%',
           });

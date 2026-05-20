@@ -1,6 +1,7 @@
 """
 Antigravity Orchestration Client
 Robust wrapper for PANOR's 7-agent clinical workflow with graceful offline simulation capabilities.
+Updated for Ahmed Raza cardiac emergency demo scenario.
 """
 
 import asyncio
@@ -60,18 +61,17 @@ class AntigravityOrchestrator:
             execution_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
             workflow_id = f"wf-sim-{int(start_time.timestamp())}"
             
+            text_input = multimodal_input.get('text', '')
+            emergency_detected = self._check_emergency_keywords(text_input)
+            
             return {
                 'workflow_id': workflow_id,
                 'workplan_id': f"plan-{workflow_id}",
                 'status': 'COMPLETED',
-                'result': {
-                    'subjective': "Patient complains of mild cardiovascular discomfort. Roman Urdu input recorded.",
-                    'objective': "Extracted vitals - BP: 120/80, HR: 72 bpm.",
-                    'assessment': "Clinical risk: Moderate. AI reasoning trust threshold: 92%.",
-                    'plan': "Dispatched CBC & Lipid lab requests. Flagged clashing NSAIDs."
-                },
-                'traces': self._generate_simulated_traces(workflow_id),
-                'execution_time_ms': execution_time_ms
+                'result': self._generate_clinical_result(text_input, emergency_detected),
+                'traces': self._generate_simulated_traces(workflow_id, text_input, emergency_detected),
+                'execution_time_ms': execution_time_ms,
+                'emergency_detected': emergency_detected,
             }
             
         try:
@@ -81,7 +81,7 @@ class AntigravityOrchestrator:
                 'patient_id': patient_id,
                 'multimodal_input': multimodal_input,
                 'timestamp': datetime.now().isoformat(),
-                'workflow_version': '1.0'
+                'workflow_version': '2.0'
             }
             
             execution_response = await self._execute_antigravity_workflow(
@@ -107,41 +107,192 @@ class AntigravityOrchestrator:
             self.mock_mode = True
             return await self.execute_consultation_workflow(patient_id, multimodal_input, workflow_name)
 
-    def _generate_simulated_traces(self, workflow_id: str) -> Dict[str, Any]:
+    def _check_emergency_keywords(self, text: str) -> bool:
+        """Check for emergency signal keywords in patient input."""
+        emergency_signals = [
+            'chest pain', 'seene mein dard', 'dil mein dard', 'saans phoolna',
+            'shortness of breath', 'dyspnea', 'cardiac', 'dard',
+            'bukhar', 'fever', 'breathing', 'heart',
+        ]
+        text_lower = text.lower() if text else ''
+        matched = sum(1 for signal in emergency_signals if signal in text_lower)
+        return matched >= 2  # RED flag if 2+ emergency signals present
+
+    def _generate_clinical_result(self, text_input: str, emergency: bool) -> Dict[str, Any]:
+        """Generate clinically realistic SOAP-like result based on input."""
+        if emergency:
+            return {
+                'subjective': "52M Ahmed Raza presents with 3-day history of fever (99.1°F), chest discomfort, and exertional dyspnea. Known T2DM on Metformin 500mg BD, Hypertension on Amlodipine 5mg. Roman Urdu input: '3 din se bukhar, seene mein dard, saans phoolna.'",
+                'objective': "BP: 130/85 mmHg | HR: 78 bpm | SpO2: 97% | Temp: 99.1°F | ECG: Sinus rhythm with non-specific ST-T changes V4-V6.",
+                'assessment': "🔴 RED ALERT: Atypical chest pain in diabetic with hypertension. Rule out ACS. Clinical confidence: 94%. Drug safety: NSAIDs BLOCKED (Metformin conflict).",
+                'plan': "STAT: ECG + Troponin-I + CBC. Continue Metformin + Amlodipine. Paracetamol 500mg PRN (safe alternative). 48h cardiology follow-up scheduled.",
+                'risk_level': 'RED',
+                'emergency_flag': True,
+            }
+        else:
+            return {
+                'subjective': f"Patient describes symptoms. Roman Urdu/English input processed by Agent 01. Clinical entity extraction complete.",
+                'objective': "Vitals stable. No acute abnormalities detected on preliminary review.",
+                'assessment': "Clinical risk: Low-Moderate. Agent 02 reasoning trust threshold: 88%.",
+                'plan': "Continue current medications. Routine follow-up recommended. Agent 06 monitoring enabled.",
+                'risk_level': 'GREEN',
+                'emergency_flag': False,
+            }
+
+    def _generate_simulated_traces(self, workflow_id: str, text_input: str = '', emergency: bool = False) -> Dict[str, Any]:
         """Generates premium diagnostic telemetry records matching 7-agent schema."""
         return {
             'workplan_id': f"workplan-{workflow_id}",
+            'execution_mode': 'agentic_orchestration',
+            'total_agents': 7,
             'agents': {
                 'agent_01_intake': {
                     'agent_id': 'agent_01_intake',
-                    'reasoning_chain': ['Translate Roman Urdu to clinical summary', 'Validate voice audio files'],
-                    'output': {'translated_text': 'Slight heart pain with temperature.'},
-                    'status': 'COMPLETED'
+                    'name': 'Intake Intelligence',
+                    'reasoning_chain': [
+                        'Detected input modality: text (Roman Urdu)',
+                        'Language classification: Roman Urdu → Urdu (confidence: 96%)',
+                        'Clinical entity extraction: fever, chest_pain, dyspnea',
+                        'Severity scoring: HIGH (multiple acute symptoms in diabetic patient)',
+                        'Urgency classification: ESCALATE',
+                    ],
+                    'output': {
+                        'language_detected': 'Roman Urdu',
+                        'translated_text': 'For 3 days, I have had fever, chest pain, and shortness of breath.',
+                        'symptoms': ['fever_3d', 'chest_pain', 'dyspnea_exertional'],
+                        'severity_score': 0.84,
+                    },
+                    'confidence': 0.96,
+                    'latency_ms': 1400,
+                    'status': 'COMPLETED',
                 },
                 'agent_02_clinical_reasoning': {
                     'agent_id': 'agent_02_clinical_reasoning',
-                    'reasoning_chain': ['Cross-reference symptom database', 'Evaluate emergency threshold limits'],
-                    'output': {'risk_level': 'MODERATE', 'emergency_alert': False},
-                    'status': 'COMPLETED'
+                    'name': 'Clinical Reasoning & Emergency Detection',
+                    'reasoning_chain': [
+                        'Cross-referencing symptoms against patient history: T2DM + Hypertension',
+                        'Prior ECG: Normal (6 months ago) — new ST changes significant',
+                        'Risk factor analysis: Male, 52, diabetic, hypertensive, BMI 28.4',
+                        'Emergency signal classifier: chest_pain + dyspnea + T2DM = RED FLAG',
+                        f'Risk level: {"RED — Immediate evaluation required" if emergency else "GREEN — Routine monitoring"}',
+                    ],
+                    'output': {
+                        'risk_level': 'RED' if emergency else 'GREEN',
+                        'emergency_alert': emergency,
+                        'differential_diagnoses': [
+                            {'condition': 'Acute Coronary Syndrome', 'confidence': 0.42, 'evidence': 'Chest pain + T2DM + new ST changes'},
+                            {'condition': 'Atypical Angina', 'confidence': 0.31, 'evidence': 'Exertional dyspnea + cardiovascular risk factors'},
+                            {'condition': 'Viral Myocarditis', 'confidence': 0.15, 'evidence': 'Fever + chest pain — less likely given age'},
+                            {'condition': 'Musculoskeletal Pain', 'confidence': 0.12, 'evidence': 'Cannot rule out without further workup'},
+                        ],
+                    },
+                    'confidence': 0.94,
+                    'latency_ms': 2100,
+                    'status': 'COMPLETED',
                 },
                 'agent_03_drug_safety': {
                     'agent_id': 'agent_03_drug_safety',
-                    'reasoning_chain': ['Analyze clashing pharmaceutical ingredients'],
-                    'output': {'contraindications': ['NSAID clashing with active aspirin']},
-                    'status': 'COMPLETED'
+                    'name': 'Drug Safety Guardian',
+                    'reasoning_chain': [
+                        'Active medications: Metformin 500mg, Amlodipine 5mg, Aspirin 75mg',
+                        'Checking proposed analgesic options for chest pain management',
+                        '⚠️ Ibuprofen (NSAID): BLOCKED — Elevates hypoglycemia risk with Metformin',
+                        '⚠️ Ibuprofen (NSAID): BLOCKED — Blocks cardioprotective effect of Aspirin',
+                        '✅ Paracetamol 500mg: SAFE — No interactions with current medications',
+                    ],
+                    'output': {
+                        'blocked_drugs': ['Ibuprofen', 'Diclofenac', 'Naproxen'],
+                        'safe_alternatives': [{'drug': 'Paracetamol', 'dosage': '500mg', 'frequency': 'Q6H PRN'}],
+                        'contraindications': [
+                            'NSAID + Metformin = Hypoglycemia risk',
+                            'NSAID + Aspirin = Cardioprotective effect blocked',
+                        ],
+                    },
+                    'confidence': 0.97,
+                    'latency_ms': 800,
+                    'status': 'ACTION_REQUIRED' if emergency else 'COMPLETED',
                 },
                 'agent_04_lab_coordination': {
                     'agent_id': 'agent_04_lab_coordination',
-                    'reasoning_chain': ['Identify necessary pathology tests'],
-                    'output': {'recommended_tests': ['Lipid Profile STAT', 'CBC']},
-                    'status': 'COMPLETED'
+                    'name': 'Laboratory Coordination',
+                    'reasoning_chain': [
+                        'Clinical context: Chest pain in diabetic with hypertension',
+                        'Urgency classification: STAT (emergency cardiac workup)',
+                        'Generating clinical intent for lab staff communication',
+                        'Escalation threshold: Troponin-I > 0.04 ng/mL → auto-alert doctor',
+                    ],
+                    'output': {
+                        'recommended_tests': [
+                            {'test': 'ECG (12-lead)', 'urgency': 'STAT', 'intent': 'Rule out acute MI'},
+                            {'test': 'Troponin-I', 'urgency': 'STAT', 'intent': 'Cardiac biomarker for MI diagnosis'},
+                            {'test': 'CBC', 'urgency': 'URGENT', 'intent': 'Baseline hematology + infection screening'},
+                            {'test': 'HbA1c', 'urgency': 'ROUTINE', 'intent': 'Diabetes control assessment'},
+                            {'test': 'Lipid Panel', 'urgency': 'ROUTINE', 'intent': 'Cardiovascular risk profiling'},
+                        ],
+                        'clinical_intent_note': 'Rule out acute MI in 52M diabetic presenting with chest pain and dyspnea. Prior ECG was normal 6 months ago. New non-specific ST changes noted.',
+                    },
+                    'confidence': 0.95,
+                    'latency_ms': 1200,
+                    'status': 'COMPLETED',
+                },
+                'agent_05_epidemiology': {
+                    'agent_id': 'agent_05_epidemiology',
+                    'name': 'Epidemiology Intelligence',
+                    'reasoning_chain': [
+                        'Regional monitoring: Lahore Division, Punjab',
+                        'Cardiac event cluster check: 9 cases in Korangi (Karachi) — not geographically relevant',
+                        'Dengue cluster: 14 cases Lahore North-East — active monitoring',
+                        'Fever component may be viral but cardiac symptoms take priority',
+                    ],
+                    'output': {
+                        'regional_alerts': [
+                            {'cluster': 'Dengue — Lahore NE', 'severity': 'HIGH', 'cases': 14},
+                        ],
+                        'outbreak_probability': 0.23,
+                        'relevance_to_patient': 'LOW — cardiac symptoms prioritized over febrile illness',
+                    },
+                    'confidence': 0.88,
+                    'latency_ms': 3200,
+                    'status': 'COMPLETED',
+                },
+                'agent_06_follow_up': {
+                    'agent_id': 'agent_06_follow_up',
+                    'name': 'Follow-Up Monitoring',
+                    'reasoning_chain': [
+                        'Emergency case — configuring accelerated follow-up protocol',
+                        'SMS reminder: 24h + 48h post-consultation symptom check',
+                        'Medication compliance tracking: Metformin + Amlodipine + Aspirin',
+                        'Deterioration classifier: Alert doctor if fever > 101°F or SpO2 < 94%',
+                    ],
+                    'output': {
+                        'follow_up_schedule': '48h cardiology follow-up',
+                        'reminders_configured': True,
+                        'deterioration_thresholds': {'temp_max': '101°F', 'spo2_min': '94%', 'hr_max': '110 bpm'},
+                    },
+                    'confidence': 0.93,
+                    'latency_ms': 900,
+                    'status': 'COMPLETED',
                 },
                 'agent_07_verification': {
                     'agent_id': 'agent_07_verification',
-                    'reasoning_chain': ['Consolidate final draft SOAP note', 'Perform threshold checks'],
-                    'output': {'confidence_score': 0.92},
-                    'status': 'COMPLETED'
-                }
+                    'name': 'Verification & SOAP Generation',
+                    'reasoning_chain': [
+                        'Consolidating outputs from all 6 upstream agents',
+                        'Contradiction check: No conflicts between agent assessments',
+                        'Confidence threshold validation: 92% overall (PASS — above 85% minimum)',
+                        'Generating structured SOAP note draft for physician review',
+                        'Audit log entry created with immutable trace ID',
+                    ],
+                    'output': {
+                        'overall_confidence': 0.92,
+                        'contradictions_found': 0,
+                        'soap_generated': True,
+                        'audit_trace_id': f'PANOR-2026-{workflow_id}',
+                    },
+                    'confidence': 0.92,
+                    'latency_ms': 500,
+                    'status': 'COMPLETED',
+                },
             }
         }
 

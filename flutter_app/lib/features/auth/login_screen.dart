@@ -78,12 +78,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Color roleColor = widget.color;
+    final LinearGradient buttonGradient = AppColors.gradientForRole(widget.role);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: AppColors.textPrimary),
+        leading: BackButton(color: Colors.white),
       ),
       body: SafeArea(
         child: Center(
@@ -93,96 +96,125 @@ class _LoginScreenState extends State<LoginScreen> {
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Biometric Fingerprint/Lock Visual matching Screen 4 Mockup
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      width: 90,
+                      height: 90,
                       decoration: BoxDecoration(
-                        color: widget.color.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
+                        color: roleColor.withValues(alpha: 0.1),
+                        border: Border.all(color: roleColor.withValues(alpha: 0.25), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: roleColor.withValues(alpha: 0.15),
+                            blurRadius: 20,
+                          ),
+                        ],
                       ),
                       child: Icon(
-                        widget.role == 'Patient'
-                            ? Icons.person_rounded
-                            : widget.role == 'Doctor'
-                                ? Icons.medical_services_rounded
-                                : widget.role == 'Lab Technician'
-                                    ? Icons.biotech_rounded
-                                    : Icons.admin_panel_settings_rounded,
-                        color: widget.color,
+                        Icons.fingerprint_rounded,
+                        color: roleColor,
                         size: 48,
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
+                  // Welcome Headers
                   Center(
-                    child: Text(
-                      'Welcome to PANOR',
-                      style: GoogleFonts.outfit(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Text(
-                      'Login to your ${widget.role} Workspace',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        color: AppColors.textSecondary,
-                      ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Welcome Back',
+                          style: GoogleFonts.outfit(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Please login to continue',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 36),
+                  // Email Input Field
                   TextFormField(
                     controller: _emailController,
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Email is required';
+                      if (value == null || value.isEmpty) return 'Email or Patient ID is required';
                       return null;
                     },
                     decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      labelText: 'Email or Patient ID',
+                      labelStyle: GoogleFonts.inter(color: AppColors.textSecondary),
+                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      errorStyle: GoogleFonts.inter(color: AppColors.error),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: const BorderSide(color: AppColors.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: widget.color, width: 2),
+                        borderSide: BorderSide(color: roleColor, width: 1.5),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Password Input Field
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Password is required';
                       return null;
                     },
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      labelStyle: GoogleFonts.inter(color: AppColors.textSecondary),
+                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: AppColors.textSecondary,
+                        ),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      errorStyle: GoogleFonts.inter(color: AppColors.error),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: const BorderSide(color: AppColors.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: widget.color, width: 2),
+                        borderSide: BorderSide(color: roleColor, width: 1.5),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
+                  // Forgot Password Button
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -192,27 +224,101 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'Forgot Password?',
                         style: GoogleFonts.inter(
-                          color: widget.color,
-                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Login CTA Button with Glowing Role Gradient
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
-                      : PrimaryButton(
-                          text: 'Log In',
-                          color: widget.color,
-                          onPressed: _login,
+                      : Container(
+                          decoration: BoxDecoration(
+                            gradient: buttonGradient,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: roleColor.withValues(alpha: 0.35),
+                                blurRadius: 15,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              'Login',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
+                  // Login with Biometrics Button matching Mockup Screen 4
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      // Simulated biometric tap
+                      _emailController.text = widget.role == 'Patient'
+                          ? 'patient@panor.com'
+                          : widget.role == 'Doctor'
+                              ? 'doctor@panor.com'
+                              : widget.role == 'Lab Technician'
+                                  ? 'lab@panor.com'
+                                  : 'admin@panor.com';
+                      _passwordController.text = 'password';
+                      _login();
+                    },
+                    icon: Icon(Icons.fingerprint_rounded, color: Colors.white, size: 20),
+                    label: Text(
+                      'Login with Biometrics',
+                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: AppColors.border, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Secure encrypted connection footer matching Mockup Screen 4
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.lock_rounded, color: AppColors.textMuted, size: 13),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Secure-encrypted connection',
+                        style: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Don't have an account?",
-                        style: GoogleFonts.inter(color: AppColors.textSecondary),
+                        style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13),
                       ),
                       TextButton(
                         onPressed: () {
@@ -221,8 +327,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           'Register',
                           style: GoogleFonts.inter(
-                            color: widget.color,
+                            color: roleColor,
                             fontWeight: FontWeight.bold,
+                            fontSize: 13,
                           ),
                         ),
                       ),

@@ -17,7 +17,7 @@ class PatientTimelineScreen extends StatelessWidget {
         'color': AppColors.emergencyRed,
         'icon': Icons.report_problem_rounded,
         'description': 'Intake translation flagged chest pain and shortness of breath (Roman Urdu: "seene me dard aur thakan"). Triggered automatic doctor triage and order authorize.',
-        'doctor': 'Dr. Amit Verma',
+        'doctor': 'Dr. Fatima Hassan',
       },
       {
         'date': 'May 18, 2026',
@@ -36,8 +36,8 @@ class PatientTimelineScreen extends StatelessWidget {
         'category': 'PRESCRIPTION',
         'color': AppColors.success,
         'icon': Icons.gpp_good_rounded,
-        'description': 'Agent 03 completed safety verification. Overruled conflict between pain suppressants and cardioprotective aspirin regimen. Verified by Dr. Amit Verma.',
-        'doctor': 'Dr. Amit Verma',
+        'description': 'Agent 03 completed safety verification. Overruled conflict between pain suppressants and cardioprotective aspirin regimen. Verified by Dr. Fatima Hassan.',
+        'doctor': 'Dr. Fatima Hassan',
       },
       {
         'date': 'May 12, 2026',
@@ -47,7 +47,7 @@ class PatientTimelineScreen extends StatelessWidget {
         'color': AppColors.brandIndigo,
         'icon': Icons.history_edu_rounded,
         'description': 'Routine hypertension checkup completed. Digital signature applied. SOAP ledger block: #SOAP-1092-A.',
-        'doctor': 'Dr. Amit Verma',
+        'doctor': 'Dr. Fatima Hassan',
       },
     ];
 

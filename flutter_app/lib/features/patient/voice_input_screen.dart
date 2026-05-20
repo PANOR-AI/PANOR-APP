@@ -303,7 +303,7 @@ class _VoiceInputScreenState extends State<VoiceInputScreen> with SingleTickerPr
                       SnackBar(
                         content: Text(
                           _emergencyDetected
-                              ? '🚨 Urgent Intake flagged! Dr. Amit Verma has been alerted STAT.'
+                              ? 'Urgent Intake flagged! Dr. Fatima Hassan has been alerted STAT.'
                               : 'Intake transmitted successfully to clinical copilot!',
                         ),
                         backgroundColor: _emergencyDetected ? AppColors.emergencyRed : AppColors.success,

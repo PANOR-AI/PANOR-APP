@@ -20,8 +20,8 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
 
   // Extracted Data Mock
   final Map<String, dynamic> _extractedReport = {
-    'patient': 'Rahul Sharma',
-    'lab': 'Metro City Pathology Labs',
+    'patient': 'Ahmed Raza',
+    'lab': 'PANOR Central Pathology Lab, Lahore',
     'date': 'May 19, 2026',
     'parameters': [
       {'name': 'Serum Troponin I', 'value': '0.08 ng/mL', 'reference': '< 0.04 ng/mL', 'status': 'HIGH', 'color': AppColors.emergencyRed},
@@ -269,7 +269,7 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Report successfully tokenized, committed to Ledger, and matched with Dr. Amit Verma.'),
+                        content: Text('Report successfully tokenized, committed to Ledger, and matched with Dr. Fatima Hassan.'),
                         backgroundColor: AppColors.success,
                       ),
                     );
