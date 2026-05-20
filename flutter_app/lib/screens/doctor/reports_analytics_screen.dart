@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ReportsAnalyticsScreen extends StatelessWidget {
+  const ReportsAnalyticsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +101,7 @@ class ReportsAnalyticsScreen extends StatelessWidget {
           const SizedBox(height: 10),
           LinearProgressIndicator(
             value: value,
-            backgroundColor: color.withOpacity(0.08),
+            backgroundColor: color.withValues(alpha: 0.08),
             color: color,
             minHeight: 8,
             borderRadius: BorderRadius.circular(4),

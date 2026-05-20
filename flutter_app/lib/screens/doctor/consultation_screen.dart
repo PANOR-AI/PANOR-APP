@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/ai_provider.dart';
 
 class ConsultationScreen extends StatefulWidget {
+  const ConsultationScreen({super.key});
+
   @override
   _ConsultationScreenState createState() => _ConsultationScreenState();
 }

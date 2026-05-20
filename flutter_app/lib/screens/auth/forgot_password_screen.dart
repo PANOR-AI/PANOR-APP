@@ -5,7 +5,7 @@ import '../../widgets/custom_buttons.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   final Color color;
 
-  const ForgotPasswordScreen({required this.color});
+  const ForgotPasswordScreen({super.key, required this.color});
 
   @override
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/patient_provider.dart';
 
 class MedicationsScreen extends StatelessWidget {
+  const MedicationsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final patientProv = Provider.of<PatientProvider>(context);
@@ -44,7 +46,7 @@ class MedicationsScreen extends StatelessWidget {
                             border: Border.all(color: const Color(0xFFE2E8F0)),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.01),
+                                color: Colors.black.withValues(alpha: 0.01),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               )
@@ -55,7 +57,7 @@ class MedicationsScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0066FF).withOpacity(0.08),
+                                  color: const Color(0xFF0066FF).withValues(alpha: 0.08),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -100,7 +102,7 @@ class MedicationsScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.08),
+                                  color: Colors.green.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(

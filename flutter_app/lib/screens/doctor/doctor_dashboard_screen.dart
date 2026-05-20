@@ -5,6 +5,8 @@ import '../../core/providers/doctor_provider.dart';
 import '../../core/providers/auth_provider.dart';
 
 class DoctorDashboardScreen extends StatelessWidget {
+  const DoctorDashboardScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final docProv = Provider.of<DoctorProvider>(context);
@@ -146,7 +148,7 @@ class DoctorDashboardScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF00C853).withOpacity(0.08),
+                                    color: const Color(0xFF00C853).withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -190,7 +192,7 @@ class DoctorDashboardScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
+                color: color.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 20),

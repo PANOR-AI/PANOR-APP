@@ -12,6 +12,8 @@ import 'notifications_screen.dart';
 import 'profile_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
+  const PatientHomeScreen({super.key});
+
   @override
   _PatientHomeScreenState createState() => _PatientHomeScreenState();
 }

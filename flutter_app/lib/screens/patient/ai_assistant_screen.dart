@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/ai_provider.dart';
 
 class AIAssistantScreen extends StatefulWidget {
+  const AIAssistantScreen({super.key});
+
   @override
   _AIAssistantScreenState createState() => _AIAssistantScreenState();
 }
@@ -167,7 +169,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0066FF).withOpacity(0.05),
+                color: const Color(0xFF0066FF).withValues(alpha: 0.05),
               ),
               child: const Icon(Icons.psychology_outlined, size: 64, color: Color(0xFF0066FF)),
             ),
@@ -204,7 +206,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             ? []
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.01),
+                  color: Colors.black.withValues(alpha: 0.01),
                   blurRadius: 5,
                   offset: const Offset(0, 2),
                 )
@@ -325,7 +327,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0066FF).withOpacity(0.08),
+                          color: const Color(0xFF0066FF).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

@@ -9,6 +9,8 @@ import '../doctor/doctor_home_screen.dart';
 import '../admin/admin_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -78,10 +80,10 @@ class _SplashScreenState extends State<SplashScreen>
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF0066FF).withOpacity(0.08),
+                  color: const Color(0xFF0066FF).withValues(alpha: 0.08),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0066FF).withOpacity(0.15),
+                      color: const Color(0xFF0066FF).withValues(alpha: 0.15),
                       blurRadius: 30,
                       spreadRadius: 5,
                     )

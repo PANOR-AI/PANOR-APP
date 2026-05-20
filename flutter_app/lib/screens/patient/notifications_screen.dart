@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/patient_provider.dart';
 
 class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final patientProv = Provider.of<PatientProvider>(context);
@@ -48,10 +50,10 @@ class NotificationsScreen extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: isRead ? Colors.white : const Color(0xFF0066FF).withOpacity(0.02),
+                              color: isRead ? Colors.white : const Color(0xFF0066FF).withValues(alpha: 0.02),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isRead ? const Color(0xFFE2E8F0) : const Color(0xFF0066FF).withOpacity(0.2),
+                                color: isRead ? const Color(0xFFE2E8F0) : const Color(0xFF0066FF).withValues(alpha: 0.2),
                               ),
                             ),
                             child: Row(

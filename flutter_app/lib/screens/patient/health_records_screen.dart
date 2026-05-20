@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/patient_provider.dart';
 
 class HealthRecordsScreen extends StatelessWidget {
+  const HealthRecordsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final patientProv = Provider.of<PatientProvider>(context);
@@ -173,7 +175,7 @@ class HealthRecordsScreen extends StatelessWidget {
                     style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         );
@@ -221,7 +223,7 @@ class HealthRecordsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: priorityColor.withOpacity(0.08),
+                      color: priorityColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(

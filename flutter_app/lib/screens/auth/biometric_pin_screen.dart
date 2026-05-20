@@ -12,7 +12,7 @@ class BiometricPinScreen extends StatefulWidget {
   final String role;
   final Color color;
 
-  const BiometricPinScreen({
+  const BiometricPinScreen({super.key, 
     required this.email,
     required this.role,
     required this.color,

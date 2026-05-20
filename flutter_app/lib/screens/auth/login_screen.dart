@@ -16,7 +16,7 @@ class LoginScreen extends StatefulWidget {
   final Color color;
   final bool isPhoneMode;
 
-  const LoginScreen({
+  const LoginScreen({super.key, 
     required this.role,
     required this.color,
     this.isPhoneMode = false,

@@ -5,6 +5,8 @@ import '../../core/providers/auth_provider.dart';
 import '../auth/role_selection_screen.dart';
 
 class DoctorProfileScreen extends StatelessWidget {
+  const DoctorProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authProv = Provider.of<AuthProvider>(context);
@@ -30,7 +32,7 @@ class DoctorProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF00C853).withOpacity(0.08),
+                      color: const Color(0xFF00C853).withValues(alpha: 0.08),
                     ),
                     child: const CircleAvatar(
                       radius: 54,

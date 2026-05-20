@@ -7,7 +7,7 @@ class LoginOptionsScreen extends StatelessWidget {
   final String role;
   final Color color;
 
-  const LoginOptionsScreen({required this.role, required this.color});
+  const LoginOptionsScreen({super.key, required this.role, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +151,7 @@ class LoginOptionsScreen extends StatelessWidget {
           border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )

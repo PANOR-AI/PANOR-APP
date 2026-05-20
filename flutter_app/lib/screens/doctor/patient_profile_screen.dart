@@ -6,7 +6,7 @@ import '../../core/providers/doctor_provider.dart';
 class PatientProfileScreen extends StatefulWidget {
   final String patientId;
 
-  const PatientProfileScreen({required this.patientId});
+  const PatientProfileScreen({super.key, required this.patientId});
 
   @override
   _PatientProfileScreenState createState() => _PatientProfileScreenState();
@@ -61,7 +61,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF00C853).withOpacity(0.08),
+                                color: const Color(0xFF00C853).withValues(alpha: 0.08),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.person, color: Color(0xFF00C853), size: 36),
@@ -240,7 +240,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: priorityColor.withOpacity(0.08),
+                  color: priorityColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

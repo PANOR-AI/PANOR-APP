@@ -13,7 +13,7 @@ class OtpVerificationScreen extends StatefulWidget {
   final String role;
   final Color color;
 
-  const OtpVerificationScreen({
+  const OtpVerificationScreen({super.key, 
     required this.phone,
     required this.role,
     required this.color,

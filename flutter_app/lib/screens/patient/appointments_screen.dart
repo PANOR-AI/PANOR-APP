@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/patient_provider.dart';
 
 class AppointmentsScreen extends StatefulWidget {
+  const AppointmentsScreen({super.key});
+
   @override
   _AppointmentsScreenState createState() => _AppointmentsScreenState();
 }
@@ -65,7 +67,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                             border: Border.all(color: const Color(0xFFE2E8F0)),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.01),
+                                color: Colors.black.withValues(alpha: 0.01),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               )
@@ -154,7 +156,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedDocId,
+                      initialValue: selectedDocId,
                       decoration: const InputDecoration(labelText: 'Select Physician'),
                       items: prov.doctorsList.map((doc) {
                         return DropdownMenuItem<String>(

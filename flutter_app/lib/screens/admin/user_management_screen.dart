@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/admin_provider.dart';
 
 class UserManagementScreen extends StatelessWidget {
+  const UserManagementScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final adminProv = Provider.of<AdminProvider>(context);
@@ -50,7 +52,7 @@ class UserManagementScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF7C3AED).withOpacity(0.08),
+                                  color: const Color(0xFF7C3AED).withValues(alpha: 0.08),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.person, color: Color(0xFF7C3AED), size: 24),
@@ -103,7 +105,7 @@ class UserManagementScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.08),
+                                    color: Colors.red.withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(

@@ -7,6 +7,8 @@ import '../doctor/doctor_home_screen.dart';
 import '../admin/admin_home_screen.dart';
 
 class DashboardSelectionScreen extends StatelessWidget {
+  const DashboardSelectionScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authProv = Provider.of<AuthProvider>(context);
@@ -119,7 +121,7 @@ class DashboardSelectionScreen extends StatelessWidget {
           border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -130,7 +132,7 @@ class DashboardSelectionScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
+                color: color.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),

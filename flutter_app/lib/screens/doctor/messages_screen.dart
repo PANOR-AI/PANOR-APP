@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class MessagesScreen extends StatelessWidget {
+  const MessagesScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,17 +55,17 @@ class MessagesScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: unread ? const Color(0xFF00C853).withOpacity(0.01) : Colors.white,
+        color: unread ? const Color(0xFF00C853).withValues(alpha: 0.01) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: unread ? const Color(0xFF00C853).withOpacity(0.15) : const Color(0xFFE2E8F0),
+          color: unread ? const Color(0xFF00C853).withValues(alpha: 0.15) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: (unread ? const Color(0xFF00C853) : const Color(0xFF94A3B8)).withOpacity(0.1),
+            backgroundColor: (unread ? const Color(0xFF00C853) : const Color(0xFF94A3B8)).withValues(alpha: 0.1),
             child: Icon(
               Icons.chat_bubble_outline,
               color: unread ? const Color(0xFF00C853) : const Color(0xFF64748B),

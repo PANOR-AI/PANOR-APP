@@ -12,6 +12,8 @@ import 'reports_analytics_screen.dart';
 import 'doctor_profile_screen.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
+  const DoctorHomeScreen({super.key});
+
   @override
   _DoctorHomeScreenState createState() => _DoctorHomeScreenState();
 }

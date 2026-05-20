@@ -23,7 +23,7 @@ class OnboardingScreen extends StatelessWidget {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF0066FF).withOpacity(0.05),
+                  color: const Color(0xFF0066FF).withValues(alpha: 0.05),
                 ),
                 child: const Icon(
                   Icons.medical_services_rounded,

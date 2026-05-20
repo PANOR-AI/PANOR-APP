@@ -10,6 +10,8 @@ import 'epidemiology_screen.dart';
 import 'analytics_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
+  const AdminHomeScreen({super.key});
+
   @override
   _AdminHomeScreenState createState() => _AdminHomeScreenState();
 }

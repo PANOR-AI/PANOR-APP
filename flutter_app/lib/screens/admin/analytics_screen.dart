@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/providers/admin_provider.dart';
 
 class AnalyticsScreen extends StatelessWidget {
+  const AnalyticsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final adminProv = Provider.of<AdminProvider>(context);
