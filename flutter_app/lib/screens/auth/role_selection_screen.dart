@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'login_options_screen.dart';
 import 'login_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
@@ -31,7 +32,7 @@ class RoleSelectionScreen extends StatelessWidget {
   Widget _buildRoleCard(BuildContext context, String title, IconData icon, Color color) {
     return InkWell(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen(role: title, color: color)));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => LoginOptionsScreen(role: title, color: color)));
       },
       child: Container(
         padding: const EdgeInsets.all(20),

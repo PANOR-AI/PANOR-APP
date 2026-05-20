@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../widgets/custom_buttons.dart';
-import '../../core/auth_service.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/providers/patient_provider.dart';
+import 'patient_dashboard_screen.dart';
+import 'health_records_screen.dart';
+import 'ai_assistant_screen.dart';
+import 'appointments_screen.dart';
+import 'medications_screen.dart';
+import 'notifications_screen.dart';
+import 'profile_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   @override
@@ -10,107 +18,86 @@ class PatientHomeScreen extends StatefulWidget {
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
   int _currentIndex = 0;
-  Map<String, dynamic>? _dashboardData;
-  bool _isLoading = true;
+
+  final List<Widget> _screens = [
+    PatientDashboardScreen(),
+    HealthRecordsScreen(),
+    AIAssistantScreen(),
+    AppointmentsScreen(),
+    MedicationsScreen(),
+    NotificationsScreen(),
+    ProfileScreen(),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
-  }
-
-  void _fetchData() async {
-    var data = await AuthService.getDashboard('patient');
-    setState(() {
-      _dashboardData = data;
-      _isLoading = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final prov = Provider.of<PatientProvider>(context, listen: false);
+      prov.fetchDashboard();
+      prov.fetchVitals();
+      prov.fetchPrescriptions();
+      prov.fetchLabReports();
+      prov.fetchMedications();
+      prov.fetchAppointments();
+      prov.fetchNotifications();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0066FF),
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Hello, Rahul 👋', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text('How are you feeling today?', style: GoogleFonts.inter(fontSize: 14, color: Colors.white70)),
-          ],
-        ),
-      ),
-      body: _isLoading ? const Center(child: CircularProgressIndicator()) : _buildBody(),
+      backgroundColor: const Color(0xFFFAFAFA),
+      body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF0066FF),
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: const Color(0xFF94A3B8),
+        selectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11),
+        unselectedLabelStyle: GoogleFonts.inter(fontSize: 10),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.description), label: 'Records'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'AI Assistant'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_currentIndex == 0) {
-      String bp = _dashboardData?['health_summary']?['blood_pressure'] ?? 'N/A';
-      String hr = _dashboardData?['health_summary']?['heart_rate'] ?? 'N/A';
-      var appointments = _dashboardData?['appointments'] as List? ?? [];
-
-      return ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text('Health Summary', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: DashboardCard(title: 'Blood Pressure', value: bp, icon: Icons.favorite, color: Colors.red)),
-              const SizedBox(width: 16),
-              Expanded(child: DashboardCard(title: 'Heart Rate', value: hr, icon: Icons.monitor_heart, color: Colors.orange)),
-            ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Home',
           ),
-          const SizedBox(height: 32),
-          Text('Upcoming Appointments', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          if (appointments.isNotEmpty)
-            _buildAppointmentCard(appointments[0])
-          else
-            Text('No appointments scheduled.', style: GoogleFonts.inter(color: Colors.grey)),
-        ],
-      );
-    }
-    return Center(child: Text('Coming Soon', style: GoogleFonts.inter(fontSize: 20, color: Colors.grey)));
-  }
-
-  Widget _buildAppointmentCard(dynamic apt) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(backgroundImage: NetworkImage(apt['image_url'] ?? ''), radius: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(apt['doctor_name'] ?? '', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('${apt['specialty']} • ${apt['datetime']}', style: GoogleFonts.inter(fontSize: 14, color: Colors.grey)),
-              ],
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_outlined),
+            activeIcon: Icon(Icons.assignment),
+            label: 'Records',
           ),
-          const Icon(Icons.more_vert, color: Colors.grey),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.psychology_outlined),
+            activeIcon: Icon(Icons.psychology),
+            label: 'AI Co-Pilot',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month_outlined),
+            activeIcon: Icon(Icons.calendar_month),
+            label: 'Book',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medication_outlined),
+            activeIcon: Icon(Icons.medication),
+            label: 'Medications',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_none_outlined),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Alerts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );
