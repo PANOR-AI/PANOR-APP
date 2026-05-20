@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 30 days
     
     # Databases
-    # Defaults to SQLite locally for lightweight execution, overridden by docker-compose environment vars
-    DATABASE_URL: str = "sqlite+aiosqlite:///./panor.db"
+    # PostgreSQL for production
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/panor"
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # AI Config

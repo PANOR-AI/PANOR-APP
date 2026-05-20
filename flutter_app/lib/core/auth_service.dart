@@ -1,49 +1,25 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
 
 class AuthService {
   static String get baseUrl => AppConstants.apiBase;
+  static const _storage = FlutterSecureStorage();
+  static const String _tokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
 
   // ── Helper: Authenticated Headers ──────────────────────────────────────────
   static Future<Map<String, String>> _headers() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
+    final token = await _storage.read(key: _tokenKey);
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 
-  // ── Authentication ────────────────────────────────────────────────────────
-  static Future<String?> login(String email, String password) async {
-    try {
-      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/auth/login'));
-      request.fields.addAll({'username': email, 'password': password});
-      var response = await request.send();
-
-      if (response.statusCode == 200) {
-        var body = await response.stream.bytesToString();
-        var json = jsonDecode(body);
-        final token = json['access_token'] as String;
-        final role = json['role'] as String? ?? '';
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
-        await prefs.setString('user_role', role);
-        return null;
-      } else {
-        var body = await response.stream.bytesToString();
-        final detail = jsonDecode(body)['detail'] ?? 'Invalid credentials';
-        return detail.toString();
-      }
-    } catch (e) {
-      return 'Network error: $e';
-    }
-  }
-
+  // ── REGISTRATION ──────────────────────────────────────────────────────────
+  /// Register new user with email, full name, role, phone, and password
   static Future<String?> register({
     required String email,
     required String fullName,
@@ -76,17 +52,119 @@ class AuthService {
     }
   }
 
+  // ── LOGIN ─────────────────────────────────────────────────────────────────
+  /// Login with email and password
+  static Future<String?> login(String email, String password) async {
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/auth/login'));
+      request.fields.addAll({'username': email, 'password': password});
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        var body = await response.stream.bytesToString();
+        var json = jsonDecode(body);
+        final token = json['access_token'] as String;
+        final refreshToken = json['refresh_token'] as String?;
+
+        await _storage.write(key: _tokenKey, value: token);
+        if (refreshToken != null) {
+          await _storage.write(key: _refreshTokenKey, value: refreshToken);
+        }
+        return null;
+      } else {
+        var body = await response.stream.bytesToString();
+        final detail = jsonDecode(body)['detail'] ?? 'Invalid credentials';
+        return detail.toString();
+      }
+    } catch (e) {
+      return 'Network error: $e';
+    }
+  }
+
+  // ── LOGOUT ────────────────────────────────────────────────────────────────
+  /// Invalidate refresh token on server and clear local session
+  static Future<void> logout() async {
+    try {
+      final headers = await _headers();
+      await http.post(
+        Uri.parse('$baseUrl/auth/logout'),
+        headers: headers,
+      );
+    } catch (_) {}
+    
+    // Clear local secure storage regardless
+    await _storage.deleteAll();
+  }
+
+  // ── REFRESH TOKEN ─────────────────────────────────────────────────────────
+  /// Get new access token using refresh token
+  static Future<String?> refreshAccessToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final refreshToken = prefs.getString(_refreshTokenKey);
+      
+      if (refreshToken == null) {
+        return 'No refresh token available';
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/refresh'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'token': refreshToken}),
+      );
+
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final newToken = decoded['access_token'] as String;
+        await prefs.setString(_tokenKey, newToken);
+        return null;
+      } else {
+        return decoded['detail'] ?? 'Token refresh failed';
+      }
+    } catch (e) {
+      return 'Network error: $e';
+    }
+  }
+
+  // ── REQUEST OTP ───────────────────────────────────────────────────────────
+  /// Request OTP for phone number verification
+  static Future<(String?, String?)> requestOtp(String phone) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/request-otp?phone=$phone'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 && decoded['success'] == true) {
+        final otp = decoded['data']['otp_for_testing'] as String?;
+        return (null, otp?.toString());
+      } else {
+        return (
+          (decoded['message'] ?? 'OTP request failed').toString(),
+          null
+        );
+      }
+    } catch (e) {
+      return ('Network error: $e'.toString(), null);
+    }
+  }
+
+  // ── VERIFY OTP ────────────────────────────────────────────────────────────
+  /// Verify OTP and login
   static Future<String?> verifyOtp(String phone, String otp) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/verify-otp?phone=$phone&otp=$otp'),
         headers: {'Content-Type': 'application/json'},
       );
+      
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200 && decoded['success'] == true) {
-        final token = decoded['data']['access_token'];
+        final token = decoded['data']['access_token'] as String;
+        
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
+        await prefs.setString(_tokenKey, token);
         return null;
       } else {
         return decoded['message'] ?? 'OTP verification failed';
@@ -96,17 +174,42 @@ class AuthService {
     }
   }
 
+  // ── SET PIN ───────────────────────────────────────────────────────────────
+  /// Set or update user PIN (4-6 digits)
+  static Future<String?> setPin(String pin) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/set-pin'),
+        headers: await _headers(),
+        body: jsonEncode({'pin': pin}),
+      );
+      
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 && decoded['success'] == true) {
+        return null;
+      } else {
+        return decoded['message'] ?? 'PIN setup failed';
+      }
+    } catch (e) {
+      return 'Network error: $e';
+    }
+  }
+
+  // ── VERIFY PIN ────────────────────────────────────────────────────────────
+  /// Verify PIN and login
   static Future<String?> verifyPin(String email, String pin) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/verify-pin?email=$email&pin=$pin'),
         headers: {'Content-Type': 'application/json'},
       );
+      
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200 && decoded['success'] == true) {
-        final token = decoded['data']['access_token'];
+        final token = decoded['data']['access_token'] as String;
+        
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
+        await prefs.setString(_tokenKey, token);
         return null;
       } else {
         return decoded['message'] ?? 'PIN verification failed';
@@ -116,41 +219,130 @@ class AuthService {
     }
   }
 
-  // ── Dashboards & Timelines ─────────────────────────────────────────────────
-  static Future<Map<String, dynamic>?> getDashboard(String rolePath) async {
+  // ── FORGOT PASSWORD ───────────────────────────────────────────────────────
+  /// Request password reset link
+  static Future<(String?, String?)> requestPasswordReset(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/forgot-password?email=$email'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 && decoded['success'] == true) {
+        final resetToken = decoded['data']['reset_token_for_testing'] as String?;
+        return (null, resetToken?.toString());
+      } else {
+        return (
+          (decoded['message'] ?? 'Forgot password request failed').toString(),
+          null
+        );
+      }
+    } catch (e) {
+      return ('Network error: $e'.toString(), null);
+    }
+  }
+
+  // ── RESET PASSWORD ────────────────────────────────────────────────────────
+  /// Reset password with reset token
+  static Future<String?> resetPassword({
+    required String email,
+    required String resetToken,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'reset_token': resetToken,
+          'new_password': newPassword,
+        }),
+      );
+      
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 && decoded['success'] == true) {
+        return null;
+      } else {
+        return decoded['message'] ?? 'Password reset failed';
+      }
+    } catch (e) {
+      return 'Network error: $e';
+    }
+  }
+
+  // ── GET CURRENT USER ──────────────────────────────────────────────────────
+  /// Fetch current user profile
+  static Future<Map<String, dynamic>?> getCurrentUser() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/$rolePath/dashboard'),
+        Uri.parse('$baseUrl/auth/me'),
         headers: await _headers(),
       );
+      
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final decoded = jsonDecode(response.body);
+        if (decoded['success'] == true) {
+          return decoded['data'] as Map<String, dynamic>;
+        }
       }
     } catch (_) {}
     return null;
   }
 
-  // ── Patient Endpoints ──────────────────────────────────────────────────────
-  static Future<Map<String, dynamic>?> getPatientProfile() async {
+  // ── SESSION MANAGEMENT ────────────────────────────────────────────────────
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  static Future<String?> getRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_roleKey);
+  }
+
+  static Future<bool> isLoggedIn() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  static Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_refreshTokenKey);
+    await prefs.remove(_roleKey);
+  }
+
+  // ── DASHBOARD ─────────────────────────────────────────────────────────────
+  static Future<Map<String, dynamic>?> getDashboard(String role) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/patients/profile'),
+        Uri.parse('$baseUrl/${role.toLowerCase()}/dashboard'),
         headers: await _headers(),
       );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] : null;
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded;
+        }
       }
     } catch (_) {}
     return null;
   }
 
+  // ── VITALS ────────────────────────────────────────────────────────────────
   static Future<List<dynamic>> getVitalsHistory() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/health-records/vitals'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/health-records/vitals'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
@@ -173,19 +365,26 @@ class AuthService {
           'oxygen_level': oxygen,
         }),
       );
-      final decoded = jsonDecode(response.body);
-      return response.statusCode == 200 && decoded['success'] == true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static Future<List<dynamic>> getPrescriptions() async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/patients/prescriptions'), headers: await _headers());
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        return decoded is Map<String, dynamic> && decoded['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  // ── CLINICAL HISTORY ──────────────────────────────────────────────────────
+  static Future<List<dynamic>> getPrescriptions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/patients/prescriptions'),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
@@ -193,10 +392,15 @@ class AuthService {
 
   static Future<List<dynamic>> getLabReports() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/patients/lab-reports'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/patients/lab-reports'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
@@ -204,22 +408,48 @@ class AuthService {
 
   static Future<List<dynamic>> getMedications() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/patients/medications'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/patients/medications'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
   }
 
-  // ── Appointment Operations ────────────────────────────────────────────────
+  // ── APPOINTMENTS ──────────────────────────────────────────────────────────
   static Future<List<dynamic>> getAppointments() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/appointments'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/appointments'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<List<dynamic>> getDoctorsList() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/doctors/list'),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
@@ -244,58 +474,46 @@ class AuthService {
           'notes': notes,
         }),
       );
-      final decoded = jsonDecode(response.body);
-      return response.statusCode == 200 && decoded['success'] == true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  // ── Notifications ──────────────────────────────────────────────────────────
-  static Future<List<dynamic>> getNotifications() async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/notifications'), headers: await _headers());
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        return decoded is Map<String, dynamic> && decoded['success'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+  static Future<List<dynamic>> getNotifications() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/notifications'),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
   }
 
-  static Future<bool> markNotificationRead(String notificationId) async {
+  static Future<bool> markNotificationRead(String id) async {
     try {
       final response = await http.patch(
-        Uri.parse('$baseUrl/notifications/$notificationId/read'),
+        Uri.parse('$baseUrl/notifications/$id/read'),
         headers: await _headers(),
       );
-      final decoded = jsonDecode(response.body);
-      return response.statusCode == 200 && decoded['success'] == true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  // ── AI Assistant Multi-Agent Clinical Consultation ──────────────────────
-  static Future<Map<String, dynamic>?> runAIConsultation(String textInput) async {
-    try {
-      final headers = await _headers();
-      headers.remove('Content-Type'); // Let http client auto-boundary multipart
-      
-      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/ai-assistant/consultation'));
-      request.headers.addAll(headers);
-      request.fields.addAll({'text_input': textInput});
-
-      var response = await request.send();
       if (response.statusCode == 200) {
-        var body = await response.stream.bytesToString();
-        final decoded = jsonDecode(body);
-        return decoded['success'] == true ? decoded['data'] : null;
+        final decoded = jsonDecode(response.body);
+        return decoded is Map<String, dynamic> && decoded['success'] == true;
       }
     } catch (_) {}
-    return null;
+    return false;
   }
 
+  // ── AI ASSISTANT ──────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>?> runAIChat(String message, {String? sessionId}) async {
     try {
       final response = await http.post(
@@ -308,30 +526,49 @@ class AuthService {
       );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] : null;
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as Map<String, dynamic>?;
+        }
       }
     } catch (_) {}
     return null;
   }
 
-  // ── Doctor Endpoints ───────────────────────────────────────────────────────
-  static Future<Map<String, dynamic>?> getDoctorProfile() async {
+  static Future<Map<String, dynamic>?> runAIConsultation(String narration) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/doctors/profile'), headers: await _headers());
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] : null;
+      final headers = await _headers();
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/ai-assistant/consultation'),
+      );
+      
+      request.headers.addAll(headers);
+      request.fields['text_input'] = narration;
+      
+      var streamedResponse = await request.send();
+      if (streamedResponse.statusCode == 200) {
+        var responseBody = await streamedResponse.stream.bytesToString();
+        final decoded = jsonDecode(responseBody);
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as Map<String, dynamic>?;
+        }
       }
     } catch (_) {}
     return null;
   }
 
+  // ── CLINICIAN PORTALS ─────────────────────────────────────────────────────
   static Future<List<dynamic>> getDoctorPatients() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/doctors/patients'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/doctors/patients'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
@@ -339,33 +576,32 @@ class AuthService {
 
   static Future<Map<String, dynamic>?> getPatientDetail(String patientId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/doctors/patients/$patientId'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/doctors/patients/$patientId'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] : null;
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as Map<String, dynamic>?;
+        }
       }
     } catch (_) {}
     return null;
   }
 
-  static Future<List<dynamic>> getDoctorsList() async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/doctors/list'), headers: await _headers());
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
-      }
-    } catch (_) {}
-    return [];
-  }
-
-  // ── Admin Operations ───────────────────────────────────────────────────────
+  // ── ADMIN PORTALS ─────────────────────────────────────────────────────────
   static Future<List<dynamic>> adminGetUsers() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/admin/users'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/users'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
@@ -377,19 +613,25 @@ class AuthService {
         Uri.parse('$baseUrl/admin/users/$userId/deactivate'),
         headers: await _headers(),
       );
-      final decoded = jsonDecode(response.body);
-      return response.statusCode == 200 && decoded['success'] == true;
-    } catch (_) {
-      return false;
-    }
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        return decoded is Map<String, dynamic> && decoded['success'] == true;
+      }
+    } catch (_) {}
+    return false;
   }
 
   static Future<List<dynamic>> adminGetAuditLogs() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/admin/audit-logs'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/audit-logs'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] as List : [];
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as List? ?? [];
+        }
       }
     } catch (_) {}
     return [];
@@ -397,34 +639,17 @@ class AuthService {
 
   static Future<Map<String, dynamic>?> adminGetAnalytics() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/admin/analytics'), headers: await _headers());
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/analytics'),
+        headers: await _headers(),
+      );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        return decoded['success'] == true ? decoded['data'] : null;
+        if (decoded is Map<String, dynamic> && decoded['success'] == true) {
+          return decoded['data'] as Map<String, dynamic>?;
+        }
       }
     } catch (_) {}
     return null;
-  }
-
-  // ── Session ────────────────────────────────────────────────────────────────
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('jwt_token');
-  }
-
-  static Future<String?> getRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_role');
-  }
-
-  static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
-    await prefs.remove('user_role');
-  }
-
-  static Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
   }
 }
