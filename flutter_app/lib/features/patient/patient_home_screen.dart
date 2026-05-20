@@ -369,7 +369,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> with SingleTicker
               ),
               Switch(
                 value: localVal,
-                activeColor: AppColors.patientPrimary,
+                activeThumbColor: AppColors.patientPrimary,
                 onChanged: (newVal) {
                   setDialogState(() {
                     localVal = newVal;

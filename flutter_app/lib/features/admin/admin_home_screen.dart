@@ -197,7 +197,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               ),
               Switch(
                 value: localVal,
-                activeColor: AppColors.adminAccent,
+                activeThumbColor: AppColors.adminAccent,
                 onChanged: (newVal) {
                   setDialogState(() {
                     localVal = newVal;

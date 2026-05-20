@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from sqlalchemy import Column, Integer, String, Boolean, JSON
 from app.database import Base
 
@@ -13,3 +14,6 @@ class User(Base):
     p_id = Column(String, unique=True, nullable=True, index=True)  # National Patient ID: PAK-HEALTH-XXXX
     cnic_hash = Column(String, nullable=True)  # NADRA CNIC cryptographic hash
     profile_data = Column(JSON, nullable=True) # For specific details like specialties or age
+=======
+from app.models.all_models import User
+>>>>>>> fc499ec72141c05a34cfc3a83443f62db6c598dc

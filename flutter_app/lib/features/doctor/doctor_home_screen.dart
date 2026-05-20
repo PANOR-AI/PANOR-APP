@@ -235,7 +235,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               ),
               Switch(
                 value: localVal,
-                activeColor: AppColors.doctorPrimary,
+                activeThumbColor: AppColors.doctorPrimary,
                 onChanged: (newVal) {
                   setDialogState(() {
                     localVal = newVal;

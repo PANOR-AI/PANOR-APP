@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 Antigravity Orchestration Client
 Robust wrapper for PANOR's 7-agent clinical workflow with graceful offline simulation capabilities.
@@ -385,3 +386,6 @@ class ConsultationOrchestrator:
             patient_id=patient_id,
             multimodal_input=multimodal_input
         )
+=======
+from app.services.ai.antigravity_client import AntigravityOrchestrator, ConsultationOrchestrator
+>>>>>>> afc318a (PANOR updates)

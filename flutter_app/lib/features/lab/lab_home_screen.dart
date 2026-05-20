@@ -212,7 +212,7 @@ class _LabHomeScreenState extends State<LabHomeScreen> {
               ),
               Switch(
                 value: localVal,
-                activeColor: AppColors.labPrimary,
+                activeThumbColor: AppColors.labPrimary,
                 onChanged: (newVal) {
                   setDialogState(() {
                     localVal = newVal;

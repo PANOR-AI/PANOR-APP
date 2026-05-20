@@ -1,12 +1,3 @@
-"""
-Security Module for PANOR.
-
-This module handles:
-1. Secure password hashing using raw `bcrypt` (ensuring compatibility across Python versions without passlib errors).
-2. JWT (JSON Web Token) session token creation and encoding.
-3. FastAPI dependency injections to retrieve and validate the current logged-in user.
-"""
-
 import os
 from datetime import datetime, timedelta
 import bcrypt
@@ -17,86 +8,59 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.database import get_db
-from app.models.user import User
+from app.models.all_models import User
+from app.core.config import settings
 
-# Configuration parameters retrieved from environment variables
-SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey12345")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # Session tokens remain valid for 7 days
-
-# OAuth2 schema configuration mapping to our unified login API endpoint
+# OAuth2 scheme config
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verifies if a plain text password matches its stored bcrypt hash.
-    
-    Args:
-        plain_password: The raw password submitted by the user.
-        hashed_password: The secure string stored in the database.
-        
-    Returns:
-        True if the password is valid, False otherwise.
-    """
+    """Verifies a raw password against the stored bcrypt hash."""
     try:
         return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
     except Exception:
         return False
 
 def get_password_hash(password: str) -> str:
-    """
-    Generates a secure, salted bcrypt hash of a plain text password.
-    
-    Args:
-        password: The plain text password to be encrypted.
-        
-    Returns:
-        A secure string representation of the salted password hash.
-    """
+    """Salt and hash a password using bcrypt."""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    """
-    Generates a signed JWT access token containing secure session details.
-    
-    Args:
-        data: A dictionary containing claims (e.g. user identity and authorization role).
-        expires_delta: Optional custom session duration override.
-        
-    Returns:
-        A signed JWT token string.
-    """
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    """Generate a signed JWT access token."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire, "type": "access"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    """
-    FastAPI Dependency: Authenticates a request by decoding and validating the Bearer JWT token,
-    then fetching the corresponding User object from the database.
-    
-    Throws status 401 Unauthorized if the token is invalid or the user does not exist.
-    """
+def create_refresh_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    """Generate a signed JWT refresh token for session rotation."""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
+    """Decodes access token and retrieves user from database."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # Decode token and extract the user subject (email claim)
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
-        if email is None:
+        token_type: str = payload.get("type")
+        if email is None or token_type != "access":
             raise credentials_exception
     except JWTError:
         raise credentials_exception
     
-    # Query database to retrieve the authenticated user
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     
@@ -104,13 +68,21 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         raise credentials_exception
     return user
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    """
-    FastAPI Dependency: Validates that the authenticated user is currently active.
-    
-    Throws status 400 Bad Request if the account is deactivated.
-    """
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+    """Enforces that the user is currently active."""
+    if not current_user.is_active or current_user.is_deleted:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive or deleted user")
     return current_user
 
+class RoleChecker:
+    """Dependency for RBAC validation on API routes."""
+    def __init__(self, allowed_roles: list[str]):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, current_user: User = Depends(get_current_active_user)) -> User:
+        if current_user.role not in self.allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to perform this operation"
+            )
+        return current_user
