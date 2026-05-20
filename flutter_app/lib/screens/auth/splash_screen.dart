@@ -9,8 +9,10 @@ import '../doctor/doctor_home_screen.dart';
 import '../admin/admin_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
@@ -36,11 +38,12 @@ class _SplashScreenState extends State<SplashScreen>
     await authProv.checkSession();
     if (!mounted) return;
 
-    if (authProv.role != null) {
+    if (authProv.isAuthenticated && authProv.user != null) {
+      final role = authProv.user!.role;
       Widget dest;
-      if (authProv.role == 'Doctor') {
+      if (role == 'Doctor') {
         dest = DoctorHomeScreen();
-      } else if (authProv.role == 'Administrator') {
+      } else if (role == 'Administrator') {
         dest = AdminHomeScreen();
       } else {
         dest = PatientHomeScreen();
@@ -52,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen>
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => OnboardingScreen()),
+        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );
     }
   }
@@ -73,15 +76,14 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Glowing clinical logo
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF0066FF).withOpacity(0.08),
+                  color: const Color(0xFF0066FF).withValues(alpha: 0.08),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0066FF).withOpacity(0.15),
+                      color: const Color(0xFF0066FF).withValues(alpha: 0.15),
                       blurRadius: 30,
                       spreadRadius: 5,
                     )
@@ -120,7 +122,8 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 32,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0066FF)),
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(Color(0xFF0066FF)),
                 ),
               ),
             ],

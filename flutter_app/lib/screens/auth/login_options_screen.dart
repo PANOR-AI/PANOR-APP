@@ -4,129 +4,138 @@ import 'login_screen.dart';
 import 'register_screen.dart';
 
 class LoginOptionsScreen extends StatelessWidget {
-  final String role;
-  final Color color;
+  final String selectedRole;
 
-  const LoginOptionsScreen({required this.role, required this.color});
+  const LoginOptionsScreen({super.key, required this.selectedRole});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFAFAFA),
-        leading: const BackButton(color: Colors.black),
-      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              const Spacer(flex: 2),
+              // Logo
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF0066FF).withValues(alpha: 0.08),
+                ),
+                child: const Icon(
+                  Icons.health_and_safety_rounded,
+                  size: 56,
+                  color: Color(0xFF0066FF),
+                ),
+              ),
+              const SizedBox(height: 24),
               Text(
-                'Welcome Back!',
+                'Welcome to PANOR',
                 style: GoogleFonts.inter(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
                   color: const Color(0xFF0A1628),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Login to continue as $role',
+                'Sign in or create an account to continue',
                 style: GoogleFonts.inter(
-                  fontSize: 16,
+                  fontSize: 15,
                   color: const Color(0xFF64748B),
                 ),
               ),
-              const SizedBox(height: 48),
-              
-              // Email / Password Card
-              _buildOptionCard(
-                context: context,
-                title: 'Email / Password',
-                icon: Icons.email_outlined,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => LoginScreen(role: role, color: color),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              // Phone Number Card
-              _buildOptionCard(
-                context: context,
-                title: 'Phone Number',
-                icon: Icons.phone_android_outlined,
-                onTap: () {
-                  // Standard login using phone
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => LoginScreen(role: role, color: color, isPhoneMode: true),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              // Google Card
-              _buildOptionCard(
-                context: context,
-                title: 'Google',
-                icon: Icons.g_mobiledata_rounded,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Google Sign-In integration.')),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              // Apple Card
-              _buildOptionCard(
-                context: context,
-                title: 'Apple',
-                icon: Icons.apple_rounded,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Apple Sign-In integration.')),
-                  );
-                },
-              ),
-              
               const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+              // Login button
+              _buildButton(
+                context,
+                label: 'Login',
+                icon: Icons.login_rounded,
+                filled: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LoginScreen(selectedRole: selectedRole),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RegisterScreen(role: role, color: color),
-                        ),
-                      );
-                    },
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Create Account button
+              _buildButton(
+                context,
+                label: 'Create Account',
+                icon: Icons.person_add_rounded,
+                filled: false,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RegisterScreen(defaultRole: selectedRole),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Divider
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'Sign Up',
+                      'or continue with',
                       style: GoogleFonts.inter(
-                        color: color,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: const Color(0xFF94A3B8),
                       ),
+                    ),
+                  ),
+                  const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Social buttons row
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSocialButton(
+                      label: 'Phone',
+                      icon: Icons.phone_android_rounded,
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Phone login coming soon')),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSocialButton(
+                      label: 'Google',
+                      icon: Icons.g_mobiledata_rounded,
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Google login coming soon')),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSocialButton(
+                      label: 'Apple',
+                      icon: Icons.apple_rounded,
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Apple login coming soon')),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
+              const Spacer(flex: 2),
             ],
           ),
         ),
@@ -134,43 +143,66 @@ class LoginOptionsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionCard({
-    required BuildContext context,
-    required String title,
+  Widget _buildButton(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required bool filled,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 20),
+        label: Text(
+          label,
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: filled ? const Color(0xFF0066FF) : Colors.white,
+          foregroundColor: filled ? Colors.white : const Color(0xFF0A1628),
+          elevation: 0,
+          side: filled
+              ? BorderSide.none
+              : const BorderSide(color: Color(0xFFE2E8F0)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required String label,
     required IconData icon,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        height: 52,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: const Color(0xFF64748B), size: 24),
-            const SizedBox(width: 16),
+            Icon(icon, size: 22, color: const Color(0xFF475569)),
+            const SizedBox(height: 2),
             Text(
-              title,
+              label,
               style: GoogleFonts.inter(
-                fontSize: 16,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF0A1628),
+                color: const Color(0xFF475569),
               ),
             ),
-            const Spacer(),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0xFF94A3B8)),
           ],
         ),
       ),

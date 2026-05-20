@@ -2,58 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/auth_provider.dart';
-import '../patient/patient_home_screen.dart';
-import '../doctor/doctor_home_screen.dart';
-import '../admin/admin_home_screen.dart';
-import 'register_screen.dart';
-import 'forgot_password_screen.dart';
+import 'login_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  final String selectedRole;
-  const LoginScreen({super.key, required this.selectedRole});
+class ResetPasswordScreen extends StatefulWidget {
+  final String email;
+  final String otp;
+
+  const ResetPasswordScreen({
+    super.key,
+    required this.email,
+    required this.otp,
+  });
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  bool _obscure = true;
+  final _confirmCtrl = TextEditingController();
+  bool _obscurePass = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    final success = await auth.login(_emailCtrl.text.trim(), _passwordCtrl.text);
+    final success = await auth.resetPasswordWithOtp(
+      email: widget.email,
+      otp: widget.otp,
+      newPassword: _passwordCtrl.text,
+    );
+
     if (!mounted) return;
 
-    if (success && auth.user != null) {
-      final role = auth.user!.role;
-      Widget dest;
-      if (role == 'Doctor') {
-        dest = DoctorHomeScreen();
-      } else if (role == 'Administrator') {
-        dest = AdminHomeScreen();
-      } else {
-        dest = PatientHomeScreen();
-      }
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Password updated successfully. Please login.'),
+          backgroundColor: Colors.green.shade600,
+        ),
+      );
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => dest),
+        MaterialPageRoute(
+          builder: (_) => LoginScreen(selectedRole: auth.user?.role ?? 'Patient'),
+        ),
         (_) => false,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.error ?? 'Login failed'),
+          content: Text(auth.error ?? 'Password reset failed'),
           backgroundColor: Colors.red.shade600,
         ),
       );
@@ -81,9 +88,19 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF0066FF).withOpacity(0.1),
+                  ),
+                  child: const Icon(Icons.lock_outline_rounded,
+                      size: 40, color: Color(0xFF0066FF)),
+                ),
+                const SizedBox(height: 24),
                 Text(
-                  'Welcome Back',
+                  'Reset Password',
                   style: GoogleFonts.inter(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
@@ -92,38 +109,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to your PANOR account',
+                  'Create a new password for your PANOR account.',
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     color: const Color(0xFF64748B),
+                    height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 36),
-                // Email
-                TextFormField(
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: _inputDecoration('Email', Icons.email_rounded),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Email is required';
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v.trim())) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
                 // Password
                 TextFormField(
                   controller: _passwordCtrl,
-                  obscureText: _obscure,
-                  decoration: _inputDecoration('Password', Icons.lock_rounded).copyWith(
+                  obscureText: _obscurePass,
+                  decoration: _inputDeco('New Password', Icons.lock_rounded).copyWith(
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        _obscurePass ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                         color: const Color(0xFF94A3B8),
                       ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
+                      onPressed: () => setState(() => _obscurePass = !_obscurePass),
                     ),
                   ),
                   validator: (v) {
@@ -132,36 +136,35 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
-                // Forgot password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                    ),
-                    child: Text(
-                      'Forgot Password?',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0066FF),
+                const SizedBox(height: 16),
+                // Confirm Password
+                TextFormField(
+                  controller: _confirmCtrl,
+                  obscureText: _obscureConfirm,
+                  decoration: _inputDeco('Confirm Password', Icons.lock_outline_rounded).copyWith(
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirm ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        color: const Color(0xFF94A3B8),
                       ),
+                      onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                     ),
                   ),
+                  validator: (v) {
+                    if (v != _passwordCtrl.text) return 'Passwords do not match';
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 24),
-                // Login button
+                const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: auth.isLoading ? null : _login,
+                    onPressed: auth.isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0066FF),
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: const Color(0xFF0066FF).withValues(alpha: 0.5),
+                      disabledBackgroundColor: const Color(0xFF0066FF).withOpacity(0.5),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -177,43 +180,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           )
                         : Text(
-                            'Sign In',
+                            'Reset Password',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Create account link
-                Center(
-                  child: GestureDetector(
-                    onTap: () => Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RegisterScreen(defaultRole: widget.selectedRole),
-                      ),
-                    ),
-                    child: RichText(
-                      text: TextSpan(
-                        text: "Don't have an account? ",
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: const Color(0xFF64748B),
-                        ),
-                        children: [
-                          TextSpan(
-                            text: 'Create Account',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0066FF),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -224,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String label, IconData icon) {
+  InputDecoration _inputDeco(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
       labelStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
@@ -245,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.red.shade400),
+        borderSide: BorderSide(color: Colors.red),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );

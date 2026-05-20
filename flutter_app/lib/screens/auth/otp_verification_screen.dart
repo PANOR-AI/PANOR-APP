@@ -1,76 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/auth_service.dart';
-import '../../widgets/custom_buttons.dart';
-import '../patient/patient_home_screen.dart';
-import '../doctor/doctor_home_screen.dart';
-import '../admin/admin_home_screen.dart';
+import 'reset_password_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
-  final String phone;
-  final String role;
-  final Color color;
-
-  const OtpVerificationScreen({
-    required this.phone,
-    required this.role,
-    required this.color,
-  });
+  final String email;
+  const OtpVerificationScreen({super.key, required this.email});
 
   @override
-  _OtpVerificationScreenState createState() => _OtpVerificationScreenState();
+  State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _controllers =
+      List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
-  bool _isLoading = false;
 
   @override
   void dispose() {
-    for (var c in _controllers) {
+    for (final c in _controllers) {
       c.dispose();
     }
-    for (var f in _focusNodes) {
+    for (final f in _focusNodes) {
       f.dispose();
     }
     super.dispose();
   }
 
-  void _verify() async {
-    String otp = _controllers.map((c) => c.text).join();
-    if (otp.length < 6) {
+  String get _otp => _controllers.map((c) => c.text).join();
+
+  void _onChanged(int index, String value) {
+    if (value.length == 1 && index < 5) {
+      _focusNodes[index + 1].requestFocus();
+    }
+    if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
+    if (_otp.length == 6) {
+      _verify();
+    }
+  }
+
+  void _verify() {
+    if (_otp.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the full 6-digit OTP code')),
+        const SnackBar(content: Text('Please enter the 6-digit code')),
       );
       return;
     }
-
-    setState(() => _isLoading = true);
-    final error = await AuthService.verifyOtp(widget.phone, otp);
-    setState(() => _isLoading = false);
-
-    if (error == null) {
-      final authProv = Provider.of<AuthProvider>(context, listen: false);
-      await authProv.checkSession();
-      if (!mounted) return;
-
-      Widget dest;
-      if (widget.role == 'Doctor') {
-        dest = DoctorHomeScreen();
-      } else if (widget.role == 'Administrator') {
-        dest = AdminHomeScreen();
-      } else {
-        dest = PatientHomeScreen();
-      }
-      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => dest), (r) => false);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResetPasswordScreen(email: widget.email, otp: _otp),
+      ),
+    );
   }
 
   @override
@@ -79,84 +61,106 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFAFAFA),
-        leading: const BackButton(color: Colors.black),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0A1628)),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-              Text(
-                'Verify OTP',
-                style: GoogleFonts.inter(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0A1628),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF0066FF).withValues(alpha: 0.1),
                 ),
+                child: const Icon(Icons.verified_user_rounded,
+                    size: 40, color: Color(0xFF0066FF)),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
               Text(
-                'We sent a 6-digit code to\n${widget.phone}',
+                'Verify Code',
                 style: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: const Color(0xFF64748B),
-                  height: 1.5,
-                ),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0A1628)),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 8),
+              Text(
+                'Enter the 6-digit verification code sent to ${widget.email}',
+                style: GoogleFonts.inter(
+                    fontSize: 15,
+                    color: const Color(0xFF64748B),
+                    height: 1.5),
+              ),
+              const SizedBox(height: 36),
+              // OTP fields
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(6, (index) {
+                children: List.generate(6, (i) {
                   return SizedBox(
                     width: 48,
-                    child: TextField(
-                      controller: _controllers[index],
-                      focusNode: _focusNodes[index],
+                    height: 56,
+                    child: TextFormField(
+                      controller: _controllers[i],
+                      focusNode: _focusNodes[i],
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       maxLength: 1,
-                      style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold),
+                      onChanged: (v) => _onChanged(i, v),
+                      style: GoogleFonts.inter(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0A1628)),
                       decoration: InputDecoration(
                         counterText: '',
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF0066FF), width: 1.5),
+                        ),
+                        contentPadding: EdgeInsets.zero,
                       ),
-                      onChanged: (val) {
-                        if (val.isNotEmpty && index < 5) {
-                          _focusNodes[index + 1].requestFocus();
-                        } else if (val.isEmpty && index > 0) {
-                          _focusNodes[index - 1].requestFocus();
-                        }
-                      },
                     ),
                   );
                 }),
               ),
-              const SizedBox(height: 24),
-              Center(
-                child: Text(
-                  'Resend OTP in 00:30',
-                  style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 14),
+              const SizedBox(height: 36),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: _verify,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0066FF),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text('Verify',
+                      style: GoogleFonts.inter(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
               ),
-              const Spacer(),
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : PrimaryButton(
-                      text: 'Verify',
-                      color: widget.color,
-                      onPressed: _verify,
-                    ),
             ],
           ),
         ),

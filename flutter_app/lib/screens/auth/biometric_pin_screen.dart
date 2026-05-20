@@ -47,14 +47,12 @@ class _BiometricPinScreenState extends State<BiometricPinScreen> {
 
   void _verify() async {
     setState(() => _isLoading = true);
-    final error = await AuthService.verifyPin(widget.email, _pin);
+    final authProv = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProv.verifyPin(widget.email, _pin);
     setState(() => _isLoading = false);
 
-    if (error == null) {
-      final authProv = Provider.of<AuthProvider>(context, listen: false);
-      await authProv.checkSession();
+    if (success) {
       if (!mounted) return;
-
       Widget dest;
       if (widget.role == 'Doctor') {
         dest = DoctorHomeScreen();
@@ -69,7 +67,7 @@ class _BiometricPinScreenState extends State<BiometricPinScreen> {
         _pin = '';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red),
+        SnackBar(content: Text(authProv.error ?? 'Verification failed'), backgroundColor: Colors.red),
       );
     }
   }

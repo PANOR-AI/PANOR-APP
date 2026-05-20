@@ -1,27 +1,43 @@
 import 'package:flutter/material.dart';
 import '../auth_service.dart';
+import '../models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
-  String? _errorMessage;
-  Map<String, dynamic>? _userProfile;
-  String? _role;
-  bool _isAuthenticated = false;
-  
-  // For password reset flow
-  String? _resetToken;
-  String? _tempEmail;
+  String? _token;
+  UserModel? _user;
+  String? _error;
 
-  // Getters
   bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-  Map<String, dynamic>? get userProfile => _userProfile;
-  String? get role => _role;
-  bool get isAuthenticated => _isAuthenticated;
-  String? get resetToken => _resetToken;
-  String? get tempEmail => _tempEmail;
+  String? get token => _token;
+  UserModel? get user => _user;
+  Map<String, dynamic>? get userProfile => _user?.toJson();
+  String? get error => _error;
+  String? get role => _user?.role;
+  bool get isAuthenticated => _token != null && _user != null;
 
-  // ── REGISTRATION ────────────────────────────────────────────────────────
+  // ── LOGIN ─────────────────────────────────────────────────────────────────
+  Future<bool> login(String email, String password) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final err = await AuthService.login(email, password);
+    if (err == null) {
+      _token = await AuthService.getToken();
+      await fetchProfile();
+      _isLoading = false;
+      notifyListeners();
+      return _user != null;
+    } else {
+      _error = err;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ── REGISTER ──────────────────────────────────────────────────────────────
   Future<bool> register({
     required String email,
     required String fullName,
@@ -30,10 +46,10 @@ class AuthProvider extends ChangeNotifier {
     required String password,
   }) async {
     _isLoading = true;
-    _errorMessage = null;
+    _error = null;
     notifyListeners();
 
-    final error = await AuthService.register(
+    final err = await AuthService.register(
       email: email,
       fullName: fullName,
       role: role,
@@ -42,232 +58,129 @@ class AuthProvider extends ChangeNotifier {
     );
 
     _isLoading = false;
-    if (error == null) {
-      _isAuthenticated = false; // User needs to login after registration
-      _role = role;
-      _tempEmail = email;
+    if (err == null) {
       notifyListeners();
       return true;
     } else {
-      _errorMessage = error;
+      _error = err;
       notifyListeners();
       return false;
     }
   }
 
-  // ── LOGIN ────────────────────────────────────────────────────────────────
-  Future<bool> login(String email, String password) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    final error = await AuthService.login(email, password);
-    if (error == null) {
-      _isAuthenticated = true;
-      _role = await AuthService.getRole();
-      await fetchProfile();
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } else {
-      _errorMessage = error;
-      _isAuthenticated = false;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // ── LOGOUT ───────────────────────────────────────────────────────────────
-  Future<void> logout() async {
-    _isLoading = true;
-    notifyListeners();
-    
-    await AuthService.logout();
-    _userProfile = null;
-    _role = null;
-    _isAuthenticated = false;
-    _errorMessage = null;
-    _resetToken = null;
-    _tempEmail = null;
-    
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  // ── FETCH PROFILE ────────────────────────────────────────────────────────
+  // ── FETCH PROFILE (GET /api/auth/me) ──────────────────────────────────────
   Future<void> fetchProfile() async {
     try {
-      final user = await AuthService.getCurrentUser();
-      if (user != null) {
-        _userProfile = user;
-        _role = user['role'] ?? _role;
+      final data = await AuthService.getCurrentUser();
+      if (data != null) {
+        _user = UserModel.fromJson(data);
+        _token = await AuthService.getToken();
+      } else {
+        _user = null;
+        _token = null;
       }
-    } catch (_) {}
+    } catch (_) {
+      _user = null;
+      _token = null;
+    }
     notifyListeners();
   }
 
-  // ── CHECK SESSION ────────────────────────────────────────────────────────
+  // ── CHECK SESSION (splash) ────────────────────────────────────────────────
   Future<void> checkSession() async {
-    final logged = await AuthService.isLoggedIn();
-    if (logged) {
-      _isAuthenticated = true;
-      _role = await AuthService.getRole();
+    final loggedIn = await AuthService.isLoggedIn();
+    if (loggedIn) {
+      _token = await AuthService.getToken();
       await fetchProfile();
     } else {
-      _isAuthenticated = false;
-      _role = null;
-      _userProfile = null;
+      _token = null;
+      _user = null;
     }
     notifyListeners();
   }
 
-  // ── REQUEST OTP ──────────────────────────────────────────────────────────
-  Future<bool> requestOtp(String phone) async {
+  // ── FORGOT PASSWORD ───────────────────────────────────────────────────────
+  Future<bool> forgotPassword(String email) async {
     _isLoading = true;
-    _errorMessage = null;
+    _error = null;
     notifyListeners();
 
-    final (error, otp) = await AuthService.requestOtp(phone);
+    final err = await AuthService.forgotPassword(email);
     _isLoading = false;
-    if (error == null) {
+    if (err == null) {
       notifyListeners();
       return true;
     } else {
-      _errorMessage = error;
+      _error = err;
       notifyListeners();
       return false;
     }
   }
 
-  // ── VERIFY OTP ───────────────────────────────────────────────────────────
-  Future<bool> verifyOtp(String phone, String otp) async {
+  // ── RESET PASSWORD WITH OTP ───────────────────────────────────────────────
+  Future<bool> resetPasswordWithOtp({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
     _isLoading = true;
-    _errorMessage = null;
+    _error = null;
     notifyListeners();
 
-    final error = await AuthService.verifyOtp(phone, otp);
-    _isLoading = false;
-    if (error == null) {
-      _isAuthenticated = true;
-      _role = await AuthService.getRole();
-      await fetchProfile();
-      notifyListeners();
-      return true;
-    } else {
-      _errorMessage = error;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // ── SET PIN ──────────────────────────────────────────────────────────────
-  Future<bool> setPin(String pin) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    final error = await AuthService.setPin(pin);
-    _isLoading = false;
-    if (error == null) {
-      notifyListeners();
-      return true;
-    } else {
-      _errorMessage = error;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // ── VERIFY PIN ───────────────────────────────────────────────────────────
-  Future<bool> verifyPin(String email, String pin) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    final error = await AuthService.verifyPin(email, pin);
-    _isLoading = false;
-    if (error == null) {
-      _isAuthenticated = true;
-      _role = await AuthService.getRole();
-      await fetchProfile();
-      notifyListeners();
-      return true;
-    } else {
-      _errorMessage = error;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // ── REQUEST PASSWORD RESET ───────────────────────────────────────────────
-  Future<bool> requestPasswordReset(String email) async {
-    _isLoading = true;
-    _errorMessage = null;
-    _tempEmail = email;
-    notifyListeners();
-
-    final (error, token) = await AuthService.requestPasswordReset(email);
-    _isLoading = false;
-    if (error == null) {
-      _resetToken = token;
-      notifyListeners();
-      return true;
-    } else {
-      _errorMessage = error;
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // ── RESET PASSWORD ───────────────────────────────────────────────────────
-  Future<bool> resetPassword(String newPassword) async {
-    if (_tempEmail == null || _resetToken == null) {
-      _errorMessage = 'Missing reset information';
-      notifyListeners();
-      return false;
-    }
-
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    final error = await AuthService.resetPassword(
-      email: _tempEmail!,
-      resetToken: _resetToken!,
+    final err = await AuthService.resetPasswordWithOtp(
+      email: email,
+      otp: otp,
       newPassword: newPassword,
     );
 
     _isLoading = false;
-    if (error == null) {
-      _resetToken = null;
-      _tempEmail = null;
+    if (err == null) {
       notifyListeners();
       return true;
     } else {
-      _errorMessage = error;
+      _error = err;
       notifyListeners();
       return false;
     }
   }
 
-  // ── REFRESH TOKEN ────────────────────────────────────────────────────────
-  Future<bool> refreshToken() async {
-    final error = await AuthService.refreshAccessToken();
-    if (error == null) {
+  // ── VERIFY OTP ────────────────────────────────────────────────────────────
+  Future<bool> verifyOtp(String phone, String otp) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final err = await AuthService.verifyOtp(phone, otp);
+    _isLoading = false;
+    if (err == null) {
+      _token = await AuthService.getToken();
+      await fetchProfile();
+      notifyListeners();
       return true;
     } else {
-      _errorMessage = error;
-      _isAuthenticated = false;
+      _error = err;
       notifyListeners();
       return false;
     }
   }
 
-  // ── CLEAR ERROR ──────────────────────────────────────────────────────────
+  // ── LOGOUT ────────────────────────────────────────────────────────────────
+  Future<void> logout() async {
+    _isLoading = true;
+    notifyListeners();
+
+    await AuthService.logout();
+    _token = null;
+    _user = null;
+    _error = null;
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  // ── CLEAR ERROR ───────────────────────────────────────────────────────────
   void clearError() {
-    _errorMessage = null;
+    _error = null;
     notifyListeners();
   }
 }
-
