@@ -19,7 +19,7 @@ class BiometricPinScreen extends StatefulWidget {
   });
 
   @override
-  _BiometricPinScreenState createState() => _BiometricPinScreenState();
+  State<BiometricPinScreen> createState() => _BiometricPinScreenState();
 }
 
 class _BiometricPinScreenState extends State<BiometricPinScreen> {
@@ -48,6 +48,7 @@ class _BiometricPinScreenState extends State<BiometricPinScreen> {
   void _verify() async {
     setState(() => _isLoading = true);
     final error = await AuthService.verifyPin(widget.email, _pin);
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (error == null) {

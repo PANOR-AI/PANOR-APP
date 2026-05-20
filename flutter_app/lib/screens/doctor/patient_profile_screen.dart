@@ -9,7 +9,7 @@ class PatientProfileScreen extends StatefulWidget {
   const PatientProfileScreen({super.key, required this.patientId});
 
   @override
-  _PatientProfileScreenState createState() => _PatientProfileScreenState();
+  State<PatientProfileScreen> createState() => _PatientProfileScreenState();
 }
 
 class _PatientProfileScreenState extends State<PatientProfileScreen> {

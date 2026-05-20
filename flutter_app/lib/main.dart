@@ -42,7 +42,7 @@ class PanorApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0066FF),
           primary: const Color(0xFF0066FF),
-          background: const Color(0xFFFAFAFA),
+          surface: const Color(0xFFFAFAFA),
         ),
         textTheme: GoogleFonts.interTextTheme(
           Theme.of(context).textTheme,

@@ -6,7 +6,6 @@ import '../../core/providers/auth_provider.dart';
 import 'forgot_password_screen.dart';
 import 'otp_verification_screen.dart';
 import 'biometric_pin_screen.dart';
-import 'dashboard_selection_screen.dart';
 import '../patient/patient_home_screen.dart';
 import '../doctor/doctor_home_screen.dart';
 import '../admin/admin_home_screen.dart';
@@ -23,7 +22,7 @@ class LoginScreen extends StatefulWidget {
   });
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -66,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Email mode
     final authProv = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProv.login(identifier, password);
-    
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (success) {

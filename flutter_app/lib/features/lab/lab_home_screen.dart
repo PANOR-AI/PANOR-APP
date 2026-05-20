@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/role_switcher.dart';
-import '../../core/auth_service.dart';
+import '../../screens/auth/role_selection_screen.dart';
 
 class LabHomeScreen extends StatefulWidget {
   const LabHomeScreen({super.key});
@@ -168,7 +166,11 @@ class _LabHomeScreenState extends State<LabHomeScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                context.go('/role-selection');
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+                  (route) => false,
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.emergencyRed,

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
+import '../screens/patient/patient_home_screen.dart';
+import '../screens/doctor/doctor_home_screen.dart';
+import '../screens/admin/admin_home_screen.dart';
+import '../features/lab/lab_home_screen.dart';
 
 /// One-click role switcher for hackathon judge demo convenience.
 /// Floats as a FAB or can be embedded in AppBar.
@@ -25,20 +28,28 @@ class RoleSwitcherButton extends StatelessWidget {
       elevation: 8,
       offset: const Offset(0, 48),
       onSelected: (role) {
+        Widget dest;
         switch (role) {
           case 'patient':
-            context.go('/patient/home');
+            dest = PatientHomeScreen();
             break;
           case 'doctor':
-            context.go('/doctor/home');
+            dest = DoctorHomeScreen();
             break;
           case 'lab':
-            context.go('/lab/home');
+            dest = LabHomeScreen();
             break;
           case 'admin':
-            context.go('/admin/home');
+            dest = AdminHomeScreen();
             break;
+          default:
+            return;
         }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => dest),
+          (route) => false,
+        );
       },
       itemBuilder: (context) => [
         _buildRoleItem('patient', 'Patient Portal', 'Ahmed Raza', Icons.person_rounded, AppColors.patientPrimary),

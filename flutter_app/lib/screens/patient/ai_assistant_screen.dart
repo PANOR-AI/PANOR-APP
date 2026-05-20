@@ -7,7 +7,7 @@ class AIAssistantScreen extends StatefulWidget {
   const AIAssistantScreen({super.key});
 
   @override
-  _AIAssistantScreenState createState() => _AIAssistantScreenState();
+  State<AIAssistantScreen> createState() => _AIAssistantScreenState();
 }
 
 class _AIAssistantScreenState extends State<AIAssistantScreen> {

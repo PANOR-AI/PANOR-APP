@@ -54,10 +54,10 @@ class ConfidenceBar extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '${(confidence * 100).toStringAsFixed(0)}%',
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: _barColor),
-                  ),
+              Text(
+                '${(confidence * 100).toStringAsFixed(0)}%',
+                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+              ),
                   const SizedBox(width: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -172,12 +172,12 @@ class AgentTraceWithConfidence extends StatelessWidget {
       decoration: BoxDecoration(
         color: isActionRequired 
             ? AppColors.warning.withValues(alpha: 0.05)
-            : Colors.white.withValues(alpha: 0.06),
+            : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isActionRequired 
               ? AppColors.warning.withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.1),
+              : const Color(0xFFE2E8F0),
         ),
       ),
       child: Column(
@@ -194,19 +194,19 @@ class AgentTraceWithConfidence extends StatelessWidget {
               Expanded(
                 child: Text(
                   agentName,
-                  style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
                 ),
               ),
               Text(
                 '${latencyMs}ms',
-                style: GoogleFonts.inter(fontSize: 10, color: Colors.white54),
+                style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF94A3B8)),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
             action,
-            style: GoogleFonts.inter(fontSize: 11, color: Colors.white70, height: 1.3),
+            style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B), height: 1.3),
           ),
           const SizedBox(height: 8),
           Row(
@@ -221,7 +221,7 @@ class AgentTraceWithConfidence extends StatelessWidget {
                     builder: (context, value, child) {
                       return LinearProgressIndicator(
                         value: value,
-                        backgroundColor: Colors.white12,
+                        backgroundColor: const Color(0xFFE2E8F0),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           confidence >= 0.9 ? AppColors.success : AppColors.warning,
                         ),
@@ -234,7 +234,7 @@ class AgentTraceWithConfidence extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '${(confidence * 100).toStringAsFixed(0)}%',
-                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
               ),
               if (reasoning != null) ...[
                 const SizedBox(width: 4),

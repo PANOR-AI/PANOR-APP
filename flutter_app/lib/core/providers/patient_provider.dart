@@ -3,6 +3,8 @@ import '../auth_service.dart';
 
 class PatientProvider extends ChangeNotifier {
   bool _isLoading = false;
+  bool _hasError = false;
+  String? _errorMessage;
   Map<String, dynamic>? _dashboardData;
   List<dynamic> _vitalsList = [];
   List<dynamic> _prescriptions = [];
@@ -13,6 +15,8 @@ class PatientProvider extends ChangeNotifier {
   List<dynamic> _doctorsList = [];
 
   bool get isLoading => _isLoading;
+  bool get hasError => _hasError;
+  String? get errorMessage => _errorMessage;
   Map<String, dynamic>? get dashboardData => _dashboardData;
   List<dynamic> get vitalsList => _vitalsList;
   List<dynamic> get prescriptions => _prescriptions;
@@ -22,15 +26,48 @@ class PatientProvider extends ChangeNotifier {
   List<dynamic> get notifications => _notifications;
   List<dynamic> get doctorsList => _doctorsList;
 
+  // Compatibility alias
   Future<void> fetchDashboard() async {
-    _isLoading = true;
-    notifyListeners();
-    final data = await AuthService.getDashboard('patient');
-    if (data != null) {
-      _dashboardData = data;
+    await fetchPatientDashboard(forceRefresh: true);
+  }
+
+  // Phase D required function with cache and state management
+  Future<void> fetchPatientDashboard({bool forceRefresh = false}) async {
+    if (_dashboardData != null && !forceRefresh) {
+      // Use cached data, but sync in background
+      _fetchDashboardInBackground();
+      return;
     }
+    _isLoading = true;
+    _hasError = false;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final res = await AuthService.getDashboard('patient');
+      if (res != null && res['success'] == true) {
+        _dashboardData = res['data'];
+      } else {
+        _hasError = true;
+        _errorMessage = res?['message'] ?? 'Failed to fetch patient dashboard';
+      }
+    } catch (e) {
+      _hasError = true;
+      _errorMessage = e.toString();
+    }
+
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> _fetchDashboardInBackground() async {
+    try {
+      final res = await AuthService.getDashboard('patient');
+      if (res != null && res['success'] == true) {
+        _dashboardData = res['data'];
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 
   Future<void> fetchVitals() async {
@@ -47,7 +84,7 @@ class PatientProvider extends ChangeNotifier {
     final success = await AuthService.logVitals(bp: bp, hr: hr, temp: temp, oxygen: oxygen);
     if (success) {
       await fetchVitals();
-      await fetchDashboard();
+      await fetchPatientDashboard(forceRefresh: true);
     }
     return success;
   }
@@ -93,7 +130,7 @@ class PatientProvider extends ChangeNotifier {
     );
     if (success) {
       await fetchAppointments();
-      await fetchDashboard();
+      await fetchPatientDashboard(forceRefresh: true);
     }
     return success;
   }

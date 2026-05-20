@@ -405,6 +405,28 @@ class AuthService {
     return null;
   }
 
+  static Future<Map<String, dynamic>?> adminGetSystemMetrics() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/admin/system-metrics'), headers: await _headers());
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        return decoded['success'] == true ? decoded['data'] : null;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> adminGetEpidemiology() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/admin/epidemiology'), headers: await _headers());
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        return decoded['success'] == true ? decoded['data'] : null;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   // ── Session ────────────────────────────────────────────────────────────────
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();

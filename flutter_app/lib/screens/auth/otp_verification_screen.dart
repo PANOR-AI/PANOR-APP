@@ -20,7 +20,7 @@ class OtpVerificationScreen extends StatefulWidget {
   });
 
   @override
-  _OtpVerificationScreenState createState() => _OtpVerificationScreenState();
+  State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
@@ -50,6 +50,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     setState(() => _isLoading = true);
     final error = await AuthService.verifyOtp(widget.phone, otp);
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (error == null) {

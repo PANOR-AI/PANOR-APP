@@ -15,7 +15,7 @@ class PatientHomeScreen extends StatefulWidget {
   const PatientHomeScreen({super.key});
 
   @override
-  _PatientHomeScreenState createState() => _PatientHomeScreenState();
+  State<PatientHomeScreen> createState() => _PatientHomeScreenState();
 }
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {

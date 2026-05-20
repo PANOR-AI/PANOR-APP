@@ -150,8 +150,14 @@ class DashboardCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderLight, width: 1.5),
-        boxShadow: AppColors.cardShadow,
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,7 +188,7 @@ class DashboardCard extends StatelessWidget {
           Text(
             title,
             style: GoogleFonts.inter(
-              color: AppColors.textSecondary,
+              color: const Color(0xFF64748B),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -191,7 +197,7 @@ class DashboardCard extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.inter(
-              color: AppColors.textPrimary,
+              color: const Color(0xFF0A1628),
               fontSize: 26,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,

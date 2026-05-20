@@ -7,7 +7,7 @@ class ConsultationScreen extends StatefulWidget {
   const ConsultationScreen({super.key});
 
   @override
-  _ConsultationScreenState createState() => _ConsultationScreenState();
+  State<ConsultationScreen> createState() => _ConsultationScreenState();
 }
 
 class _ConsultationScreenState extends State<ConsultationScreen> {

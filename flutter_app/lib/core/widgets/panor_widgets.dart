@@ -212,10 +212,16 @@ class ClinicalCard extends StatelessWidget {
       child: Container(
         padding: padding ?? const EdgeInsets.all(AppConstants.cardPadding),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(AppConstants.radiusXL),
-          border: Border.all(color: AppColors.border, width: 1),
-          boxShadow: AppColors.cardShadow,
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: accentColor != null
             ? IntrinsicHeight(
@@ -269,15 +275,21 @@ class VitalCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isAlert
             ? AppColors.emergencyRed.withValues(alpha: 0.05)
-            : AppColors.surface,
+            : Colors.white,
         borderRadius: BorderRadius.circular(AppConstants.radiusLG),
         border: Border.all(
           color: isAlert
               ? AppColors.emergencyRed.withValues(alpha: 0.3)
-              : AppColors.border,
+              : const Color(0xFFE2E8F0),
           width: isAlert ? 1.5 : 1,
         ),
-        boxShadow: AppColors.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,10 +374,16 @@ class DiagnosisCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppConstants.cardPadding),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppConstants.radiusLG),
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppColors.cardShadow,
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,10 +524,16 @@ class TimelineTile extends StatelessWidget {
                 margin: EdgeInsets.only(bottom: isLast ? 0 : AppConstants.spaceLG),
                 padding: const EdgeInsets.all(AppConstants.cardPadding),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(AppConstants.radiusLG),
-                  border: Border.all(color: AppColors.border),
-                  boxShadow: AppColors.cardShadow,
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,7 +609,7 @@ class SectionHeader extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: AppConstants.fontLG,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: const Color(0xFF0A1628),
             letterSpacing: -0.3,
           ),
         ),
@@ -658,10 +682,10 @@ class _SkeletonCardState extends State<SkeletonCard> with SingleTickerProviderSt
           borderRadius: BorderRadius.circular(widget.borderRadius),
           gradient: LinearGradient(
             colors: [
-              AppColors.surfaceVariant,
-              Color.lerp(AppColors.surfaceVariant, AppColors.border, _anim.value) ??
-                  AppColors.surfaceVariant,
-              AppColors.surfaceVariant,
+              const Color(0xFFF1F5F9),
+              Color.lerp(const Color(0xFFF1F5F9), const Color(0xFFE2E8F0), _anim.value) ??
+                  const Color(0xFFF1F5F9),
+              const Color(0xFFF1F5F9),
             ],
           ),
         ),
@@ -720,7 +744,7 @@ class ProcessingOverlay extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: AppConstants.fontMD,
-              color: AppColors.textSecondary,
+              color: const Color(0xFF64748B),
               height: 1.5,
             ),
           ),

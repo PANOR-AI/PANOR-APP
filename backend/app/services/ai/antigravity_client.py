@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.services.ai.factory import get_ai_service
-from app.services.ai.gemini import GeminiAIService
 from app.models.all_models import AIConversation, AuditLog
 
 # Define Schemas for the 7 Agents
@@ -65,7 +64,7 @@ class AntigravityOrchestrator:
     
     def __init__(self, db_session: AsyncSession):
         self.db = db_session
-        self.ai: GeminiAIService = get_ai_service()
+        self.ai = get_ai_service()
 
     async def _execute_agent(
         self, 

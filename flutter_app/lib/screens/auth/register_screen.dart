@@ -11,7 +11,7 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key, required this.role, required this.color});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -41,6 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordCtrl.text,
     );
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (success) {

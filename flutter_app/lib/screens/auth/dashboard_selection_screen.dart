@@ -12,7 +12,6 @@ class DashboardSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProv = Provider.of<AuthProvider>(context);
-    final user = authProv.userProfile;
     final role = authProv.role ?? '';
 
     return Scaffold(
