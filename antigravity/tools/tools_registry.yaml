@@ -1,0 +1,34 @@
+# Tools Registry for PANOR Antigravity Integration
+
+tools:
+  - id: speech_to_text
+    type: google_api
+    endpoint: "https://speech.googleapis.com/v1"
+  - id: vision_api
+    type: google_api
+    endpoint: "https://vision.googleapis.com/v1"
+  - id: document_ai
+    type: google_api
+    endpoint: "https://documentai.googleapis.com/v1"
+  - id: video_intelligence
+    type: google_api
+    endpoint: "https://videointelligence.googleapis.com/v1"
+  - id: patient_history
+    type: firestore_query
+    collection: "patients/{patient_id}/timeline"
+  - id: differential_diagnosis_engine
+    type: ai_reasoning_chain
+  - id: emergency_detector
+    type: ai_reasoning
+  - id: drug_interaction_db
+    type: firestore_query
+    collection: "medical_references/drug_interactions"
+  - id: contraindication_checker
+    type: ai_reasoning
+  - id: alternative_suggester
+    type: ai_reasoning
+  - id: lab_test_database
+    type: firestore_query
+    collection: "medical_references/lab_tests"
+  - id: urgency_classifier
+    type: ai_reasoning

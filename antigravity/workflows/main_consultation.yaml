@@ -1,0 +1,325 @@
+# MAIN CONSULTATION WORKFLOW
+# End-to-end orchestration of all 7 agents
+
+apiVersion: antigravity.v1
+kind: Workflow
+metadata:
+  name: main_consultation
+  namespace: panor-clinical
+  version: "1.0"
+
+spec:
+  description: "Complete PANOR consultation from patient input to SOAP generation"
+  
+  execution_model: sequential_with_parallel_optional
+  
+  triggers:
+    - type: api_call
+      endpoint: POST /api/consultation/start
+      payload:
+        patient_id: string
+        multimodal_input: object
+        language: string
+  
+  steps:
+    
+    # STEP 1: Patient Input Reception
+    - name: "step_01_patient_input"
+      type: trigger
+      input:
+        - voice_recording: optional<binary>
+        - pdf_report: optional<binary>
+        - text_input: optional<string>
+        - image: optional<binary>
+        - video: optional<binary>
+      next: ["step_02_intake"]
+    
+    # STEP 2: Multimodal Intake
+    - name: "step_02_intake"
+      agent: agent_01_intake
+      timeout_ms: 8000
+      
+      input_mapping:
+        - source: step_01_patient_input
+          fields: [voice_recording, pdf_report, text_input, image, video]
+      
+      execution:
+        workplan_log: true
+        task_plan_log: true
+        tool_call_log: true
+        reasoning_chain_log: true
+      
+      output_schema:
+        structured_symptoms: object
+        language: string
+        modalities: array
+        severity_score: enum
+        urgency_estimate: enum
+        confidence: float
+      
+      next: ["step_03_clinical_reasoning", "step_05_epidemiology_async"]
+    
+    # STEP 3: Clinical Reasoning & Emergency Detection
+    - name: "step_03_clinical_reasoning"
+      agent: agent_02_clinical_reasoning
+      timeout_ms: 5000
+      
+      input_mapping:
+        - source: step_02_intake
+          fields: [structured_symptoms, language, severity_score]
+      
+      execution:
+        workplan_log: true
+        task_plan_log: true
+        tool_call_log: true
+        emergency_detection_priority: critical
+      
+      conditional_routing:
+        - condition: "output.risk_level == RED"
+          next: ["step_03b_emergency_escalation"]
+        - condition: "output.risk_level != RED"
+          next: ["step_04_drug_safety"]
+      
+      output_schema:
+        emergency_detected: boolean
+        risk_level: enum[GREEN, YELLOW, ORANGE, RED]
+        emergency_signal: string
+        differential_diagnoses: array
+        urgency_score: float
+    
+    # STEP 3B: Emergency Escalation Branch
+    - name: "step_03b_emergency_escalation"
+      type: conditional
+      condition: "risk_level == RED"
+      
+      actions:
+        - action: send_alert_to_physician
+          channel: firebase_messaging
+          priority: immediate
+          
+        - action: generate_hospital_referral
+          system: emergency_system
+          
+        - action: log_emergency_event
+          collection: "emergencies"
+          
+        - action: halt_automated_prescription
+      
+      next: ["step_08_await_physician_override"]
+    
+    # STEP 4: Drug Safety Check
+    - name: "step_04_drug_safety"
+      agent: agent_03_drug_safety
+      trigger: physician_proposes_medication
+      timeout_ms: 3000
+      
+      input_mapping:
+        - source: step_03_clinical_reasoning
+          fields: [differential_diagnoses]
+        - source: user_input
+          fields: [proposed_medication, dosage]
+      
+      execution:
+        workplan_log: true
+        task_plan_log: true
+        tool_call_log: true
+        hard_block_enforcement: true
+      
+      conditional_routing:
+        - condition: "output.verdict == BLOCK"
+          next: ["step_04b_alternative_suggestion"]
+        - condition: "output.verdict == ALLOW"
+          next: ["step_05_lab_coordination"]
+        - condition: "output.verdict == WARN"
+          next: ["step_04c_warn_physician"]
+      
+      output_schema:
+        verdict: enum[ALLOW, WARN, BLOCK]
+        interaction_severity: enum
+        alternative_suggested: object
+    
+    # STEP 4B: Alternative Drug Suggestion
+    - name: "step_04b_alternative_suggestion"
+      type: display
+      message: "Drug interaction detected. Safe alternative suggested."
+      next: ["step_05_lab_coordination"]
+    
+    # STEP 4C: Warn Physician
+    - name: "step_04c_warn_physician"
+      type: display
+      message: "Mild drug interaction detected. Physician can override."
+      next: ["step_05_lab_coordination"]
+    
+    # STEP 5: Laboratory Coordination
+    - name: "step_05_lab_coordination"
+      agent: agent_04_lab_coordination
+      timeout_ms: 4000
+      
+      input_mapping:
+        - source: step_03_clinical_reasoning
+          fields: [differential_diagnoses]
+      
+      execution:
+        workplan_log: true
+        task_plan_log: true
+      
+      output_schema:
+        lab_plan: object
+        tests: array
+        urgency_labels: array
+    
+    next: ["step_06_verification"]
+    
+    # STEP 5-ASYNC: Epidemiology Processing (Non-blocking)
+    - name: "step_05_epidemiology_async"
+      agent: agent_05_epidemiology
+      timeout_ms: 6000
+      execution_type: async_fire_and_forget
+      
+      input_mapping:
+        - source: step_02_intake
+          fields: [structured_symptoms, language]
+      
+      execution:
+        workplan_log: true
+        task_plan_log: true
+    
+    # STEP 6-ASYNC: Follow-Up Configuration (Non-blocking)
+    - name: "step_06_follow_up_config"
+      agent: agent_06_follow_up
+      timeout_ms: 4000
+      execution_type: async_fire_and_forget
+      
+      triggered_by: "step_05_lab_coordination_completed"
+      
+      input_mapping:
+        - source: step_03_clinical_reasoning
+          fields: [differential_diagnoses, urgency_score]
+        - source: step_05_lab_coordination
+          fields: [lab_plan]
+      
+      output_schema:
+        follow_up_scheduled: boolean
+        check_time: timestamp
+    
+    # STEP 7: Verification & SOAP Generation
+    - name: "step_07_verification"
+      agent: agent_07_verification
+      timeout_ms: 3000
+      
+      input_mapping:
+        - source: step_02_intake
+          fields: [structured_symptoms, language, modalities]
+        - source: step_03_clinical_reasoning
+          fields: [differential_diagnoses, risk_level, urgency_score]
+        - source: step_04_drug_safety
+          fields: [verdict, alternative_suggested]
+        - source: step_05_lab_coordination
+          fields: [lab_plan, tests]
+      
+      execution:
+        workplan_log: true
+        task_plan_log: true
+        soap_generation_timing: critical
+      
+      conditional_routing:
+        - condition: "output.approval_status == APPROVE"
+          next: ["step_09_execution_dispatch"]
+        - condition: "output.approval_status == REVIEW || HOLD"
+          next: ["step_08_await_physician_decision"]
+      
+      output_schema:
+        approval_status: enum[APPROVE, REVIEW, HOLD]
+        confidence_score: float
+        soap_note: object
+        audit_log_id: string
+    
+    # STEP 8: Await Physician Decision
+    - name: "step_08_await_physician_decision"
+      type: pause
+      wait_for: physician_approval
+      timeout_ms: 900000
+      next: ["step_09_execution_dispatch"]
+    
+    # STEP 9: Execution & Simulations
+    - name: "step_09_execution_dispatch"
+      type: batch_operations
+      
+      operations:
+        
+        - operation: save_prescription
+          target: "patients/{patient_id}/prescriptions"
+          state_before: "NULL"
+          state_after: "{prescribed_medication}"
+          firestore_write: true
+        
+        - operation: emergency_alert
+          condition: "risk_level == RED"
+          target: "doctor_dashboard"
+          state_before: "NORMAL"
+          state_after: "EMERGENCY"
+          notification: immediate
+        
+        - operation: save_soap_note
+          target: "patients/{patient_id}/timeline"
+          state_before: "EMPTY"
+          state_after: "{soap_note_complete}"
+          firestore_write: true
+          immutable: true
+        
+        - operation: submit_lab_order
+          target: "lab_system"
+          state_before: "NULL"
+          state_after: "Work order created"
+          http_api_call: true
+        
+        - operation: notify_patient
+          target: "firebase_messaging"
+          message: "Your consultation results are ready"
+      
+      output_schema:
+        all_simulations_executed: boolean
+        state_changes: array
+        timestamps: object
+    
+    # FINAL STEP: Complete
+    - name: "step_10_workflow_complete"
+      type: end
+      log_to: audit_trail
+      display_to: physician_dashboard
+
+  error_handling:
+    
+    api_failure:
+      strategy: graceful_fallback
+      action: cache_and_retry
+    
+    low_confidence:
+      strategy: hold_recommendation
+      action: await_physician_input
+    
+    contradiction_detected:
+      strategy: surface_conflict
+      action: highlight_for_physician_review
+    
+    missing_data:
+      strategy: expose_uncertainty
+      action: prompt_for_input
+    
+    emergency_flag_active:
+      strategy: hard_stop
+      action: no_auto_execution
+
+  timeout_handling:
+    agent_timeout: propagate_and_hold
+    workflow_timeout: 300000  # 5 minutes
+    fallback: await_physician_decision
+
+  trace_collection:
+    workplan: enabled
+    task_plan: enabled
+    tool_calls: enabled
+    reasoning_chain: enabled
+    state_changes: enabled
+    error_logs: enabled
+    judge_visibility: public

@@ -1,0 +1,98 @@
+# AGENT 02: CLINICAL REASONING AGENT
+# Emergency detection + differential diagnosis generation
+
+apiVersion: antigravity.v1
+kind: Agent
+metadata:
+  id: agent_02_clinical_reasoning
+  name: "Clinical Reasoning Agent"
+  namespace: panor-clinical
+  version: "1.0"
+
+spec:
+  purpose: "Generate differential diagnoses and detect emergency signals"
+  tier: primary
+  critical: true
+  
+  model:
+    provider: google
+    name: gemini-pro
+    temperature: 0.2
+    max_tokens: 3000
+  
+  tools:
+    - id: patient_history
+      type: firestore_query
+      collection: "patients/{patient_id}/timeline"
+      query_type: append_only
+    
+    - id: differential_diagnosis_engine
+      type: ai_reasoning_chain
+      prompt: prompts/clinical_reasoning/differential_diagnosis.prompt
+      max_candidates: 5
+    
+    - id: emergency_detector
+      type: ai_reasoning
+      prompt: prompts/clinical_reasoning/emergency_screening.prompt
+      critical: true
+  
+  memory:
+    type: full_patient_history
+    includes: [consultations, medications, diagnoses, labs, allergies]
+  
+  workplan_template: |
+    AGENT 02 WORKPLAN:
+    1. Retrieve complete patient history from Firestore
+    2. Load current medications and allergies
+    3. RUN EMERGENCY DETECTION SCREEN (synchronously):
+       - Check for cardiac signals (chest pain, palpitations, dyspnea)
+       - Check for neurological signals (weakness, drooping, speech changes)
+       - Check for respiratory signals (stridor, cyanosis, severe dyspnea)
+       - Check for diabetic signals (confusion, fruity breath, rapid breathing)
+       - Check for pediatric red flags (fever + lethargy, stiff neck, rash)
+       - IF ANY SIGNAL DETECTED → risk_level = RED, trigger escalation
+    4. Generate differential diagnoses:
+       - Query differential_diagnosis_engine with symptoms + history
+       - Rank by clinical probability (Bayesian scoring)
+       - Generate confidence percentages
+       - Provide clinical reasoning for each
+    5. Detect contradictions:
+       - Compare current presentation against historical patterns
+       - Flag unexpected changes
+    6. Score overall urgency
+    7. Create immutable Antigravity trace with all reasoning steps
+
+  emergency_routing:
+    enabled: true
+    condition: "risk_level == RED"
+    action: "route_to_emergency_escalation_workflow"
+    notify_physician: immediate
+
+  output_schema:
+    type: object
+    properties:
+      emergency_detected:
+        type: boolean
+      risk_level:
+        type: enum
+        enum: [GREEN, YELLOW, ORANGE, RED]
+      emergency_signal_type:
+        type: enum
+        enum: [CARDIAC, NEUROLOGICAL, RESPIRATORY, DIABETIC, PEDIATRIC, NONE]
+      specific_finding:
+        type: string
+      differential_diagnoses:
+        type: array
+        items:
+          type: object
+          properties:
+            diagnosis: string
+            confidence: float
+            reasoning: string
+      urgency_score:
+        type: float
+      contradictions:
+        type: array
+        items: string
+      escalation_recommended:
+        type: boolean

@@ -1,0 +1,71 @@
+# AGENT 06: FOLLOW-UP MONITORING AGENT
+# Maintain continuity of care post-consultation
+
+apiVersion: antigravity.v1
+kind: Agent
+metadata:
+  id: agent_06_follow_up
+  name: "Follow-Up Monitoring Agent"
+  namespace: panor-clinical
+  version: "1.0"
+
+spec:
+  purpose: "Monitor symptom progression and escalate deterioration"
+  tier: secondary
+  
+  model:
+    provider: google
+    name: gemini-pro
+    temperature: 0.3
+    max_tokens: 1500
+  
+  tools:
+    - id: symptom_progression_tracker
+      type: ai_reasoning
+      prompt: prompts/follow_up/symptom_progression.prompt
+    
+    - id: compliance_checker
+      type: ai_reasoning
+      prompt: prompts/follow_up/compliance_check.prompt
+  
+  memory:
+    type: patient_follow_up
+    includes: [expected_trajectory, medication_adherence, symptom_reports]
+  
+  execution_type: scheduled_async
+  
+  workplan_template: |
+    AGENT 06 WORKPLAN:
+    1. Schedule automated 48-hour follow-up via Cloud Tasks
+    2. Send patient symptom progression questionnaire
+    3. Collect patient-reported status
+    4. Compare against expected recovery trajectory:
+       - Is improvement on schedule?
+       - Are symptoms worsening unexpectedly?
+       - Is compliance good?
+    5. Escalation logic:
+       - If symptoms deteriorating → flag for physician review
+       - If non-compliance detected → send reminder
+       - If RED-risk symptoms return → immediate escalation
+    6. Track medication adherence
+    7. Generate deterioration report if needed
+
+  scheduled_execution:
+    trigger: consultation_completed
+    delay_hours: 48
+    recurrence: once
+
+  output_schema:
+    type: object
+    properties:
+      symptom_progression_status:
+        type: enum
+        enum: [improving, stable, deteriorating]
+      expected_vs_actual:
+        type: string
+      compliance_score:
+        type: float
+      deterioration_flag:
+        type: boolean
+      escalation_required:
+        type: boolean
