@@ -4,7 +4,6 @@ import 'dart:io' show Platform;
 /// PANOR Design System — Application-Wide Constants
 /// Centralizes all magic numbers, spacing values, animation durations,
 /// and configuration strings to prevent hardcoding throughout the codebase.
-library;
 
 class AppConstants {
   AppConstants._();
