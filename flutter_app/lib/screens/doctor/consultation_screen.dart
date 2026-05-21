@@ -124,7 +124,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.assignment_outlined, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
+                      Icon(Icons.assignment_outlined, size: 64, color: AppColors.textMuted.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
                       Text(
                         'No consultation outcomes generated yet.',
@@ -296,9 +296,9 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.doctorAccent.withOpacity(0.1),
+                          color: AppColors.doctorAccent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.doctorAccent.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.doctorAccent.withValues(alpha: 0.2)),
                         ),
                         child: Text(
                           '$percentage% Conf.',

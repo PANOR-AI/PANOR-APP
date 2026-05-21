@@ -11,6 +11,14 @@ import 'core/providers/notification_provider.dart';
 import 'core/providers/appointment_provider.dart';
 import 'core/services/websocket_service.dart';
 import 'screens/auth/splash_screen.dart';
+import 'screens/auth/role_selection_screen.dart';
+import 'screens/auth/secure_login_screen.dart';
+import 'screens/patient/ai_assistant_screen.dart';
+import 'screens/patient/medications_screen.dart';
+import 'screens/doctor/consultation_screen.dart';
+import 'screens/dashboards/patient_dashboard.dart';
+import 'screens/dashboards/doctor_dashboard.dart';
+import 'screens/dashboards/lab_dashboard.dart';
 import 'theme/app_colors.dart';
 
 void main() {
@@ -80,6 +88,25 @@ class _PanorAppState extends State<PanorApp> {
         ),
       ),
       home: SplashScreen(),
+      routes: {
+        '/role-selection': (_) => const RoleSelectionScreen(),
+        '/login': (_) => const SecureLoginScreen(),
+        '/patient-dashboard': (_) => const PatientDashboard(),
+        '/doctor-dashboard': (_) => const DoctorDashboard(),
+        '/lab-dashboard': (_) => const LabDashboard(),
+        '/ai-assistant': (_) => const AIAssistantScreen(),
+        '/medication-reminders': (_) => const MedicationsScreen(),
+      },
+      onGenerateRoute: (settings) {
+        final name = settings.name ?? '';
+        if (name.startsWith('/consultation/')) {
+          return MaterialPageRoute(builder: (_) => const ConsultationScreen());
+        }
+        if (name.startsWith('/lab-processing/') || name.startsWith('/lab-report/')) {
+          return MaterialPageRoute(builder: (_) => const LabDashboard());
+        }
+        return MaterialPageRoute(builder: (_) => const RoleSelectionScreen());
+      },
     );
   }
 }

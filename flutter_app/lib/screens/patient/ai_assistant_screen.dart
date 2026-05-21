@@ -158,7 +158,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       gradient: AppColors.patientGradient,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.patientPrimary.withOpacity(0.3),
+                          color: AppColors.patientPrimary.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         )
@@ -192,7 +192,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 gradient: AppColors.patientGradient,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.patientPrimary.withOpacity(0.3),
+                    color: AppColors.patientPrimary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -233,7 +233,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     return ActionChip(
       label: Text(
         text,
-        style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: 12),
+        style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.9), fontSize: 12),
       ),
       backgroundColor: AppColors.surface,
       side: const BorderSide(color: AppColors.border),
@@ -260,14 +260,14 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
         boxShadow: isUser
             ? [
                 BoxShadow(
-                  color: AppColors.patientPrimary.withOpacity(0.2),
+                  color: AppColors.patientPrimary.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 )
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 5,
                   offset: const Offset(0, 2),
                 )
@@ -453,9 +453,9 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.patientPrimary.withOpacity(0.1),
+                            color: AppColors.patientPrimary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.patientPrimary.withOpacity(0.2)),
+                            border: Border.all(color: AppColors.patientPrimary.withValues(alpha: 0.2)),
                           ),
                           child: Text(
                             '$percentage% Conf.',

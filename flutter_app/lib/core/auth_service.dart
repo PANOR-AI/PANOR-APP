@@ -1,18 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
 
 class AuthService {
   static String get baseUrl => AppConstants.apiBase;
+  static String? _sessionToken;
+  static String? _sessionRole;
 
   // ── Helper: Authenticated Headers ──────────────────────────────────────────
   static Future<Map<String, String>> _headers() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
     return {
       'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (_sessionToken != null) 'Authorization': 'Bearer $_sessionToken',
     };
   }
 
@@ -29,9 +28,7 @@ class AuthService {
         final token = json['access_token'] as String;
         final role = json['role'] as String? ?? '';
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
-        await prefs.setString('user_role', role);
+        setDemoSession(token: token, role: role);
         return null;
       } else {
         var body = await response.stream.bytesToString();
@@ -84,8 +81,7 @@ class AuthService {
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200 && decoded['success'] == true) {
         final token = decoded['data']['access_token'];
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
+        setDemoSession(token: token, role: _sessionRole ?? 'Patient');
         return null;
       } else {
         return decoded['message'] ?? 'OTP verification failed';
@@ -104,8 +100,7 @@ class AuthService {
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200 && decoded['success'] == true) {
         final token = decoded['data']['access_token'];
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
+        setDemoSession(token: token, role: _sessionRole ?? 'Patient');
         return null;
       } else {
         return decoded['message'] ?? 'PIN verification failed';
@@ -275,6 +270,19 @@ class AuthService {
     }
   }
 
+  static Future<bool> markAllNotificationsRead() async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/notifications/read-all'),
+        headers: await _headers(),
+      );
+      final decoded = jsonDecode(response.body);
+      return response.statusCode == 200 && decoded['success'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── AI Assistant Multi-Agent Clinical Consultation ──────────────────────
   static Future<Map<String, dynamic>?> runAIConsultation(String textInput) async {
     try {
@@ -407,23 +415,25 @@ class AuthService {
 
   // ── Session ────────────────────────────────────────────────────────────────
   static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('jwt_token');
+    return _sessionToken;
   }
 
   static Future<String?> getRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_role');
+    return _sessionRole;
   }
 
   static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
-    await prefs.remove('user_role');
+    _sessionToken = null;
+    _sessionRole = null;
   }
 
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
+  }
+
+  static void setDemoSession({required String token, required String role}) {
+    _sessionToken = token;
+    _sessionRole = role;
   }
 }

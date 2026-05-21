@@ -17,10 +17,24 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final error = await AuthService.login(email, password);
+    final demoRole = _demoRoleFor(email, password);
+    final error = demoRole == null ? await AuthService.login(email, password) : null;
     if (error == null) {
-      _role = await AuthService.getRole();
-      await fetchProfile();
+      if (demoRole != null) {
+        AuthService.setDemoSession(token: 'offline-demo-token', role: demoRole);
+        _role = demoRole;
+        _userProfile = {
+          'full_name': demoRole == 'Doctor'
+              ? 'Dr. Ahmed Raza'
+              : demoRole == 'Administrator'
+                  ? 'PANOR Admin'
+                  : 'Ayesha Khan',
+          'role': demoRole,
+        };
+      } else {
+        _role = await AuthService.getRole();
+        await fetchProfile();
+      }
       _isLoading = false;
       notifyListeners();
       return true;
@@ -30,6 +44,16 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  String? _demoRoleFor(String email, String password) {
+    if (password != '123456') return null;
+    final normalized = email.trim().toLowerCase();
+    if (normalized == 'patient@panor.pk') return 'Patient';
+    if (normalized == 'doctor@panor.pk') return 'Doctor';
+    if (normalized == 'lab@panor.pk') return 'Lab Assistant';
+    if (normalized == 'admin@panor.pk') return 'Administrator';
+    return null;
   }
 
   Future<bool> register({

@@ -9,6 +9,7 @@ import 'biometric_pin_screen.dart';
 import '../patient/patient_home_screen.dart';
 import '../doctor/doctor_home_screen.dart';
 import '../admin/admin_home_screen.dart';
+import '../dashboards/lab_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   final String role;
@@ -75,6 +76,8 @@ class _LoginScreenState extends State<LoginScreen> {
         dest = DoctorHomeScreen();
       } else if (widget.role == 'Administrator') {
         dest = AdminHomeScreen();
+      } else if (widget.role == 'Lab Assistant') {
+        dest = const LabDashboard();
       } else {
         dest = PatientHomeScreen();
       }

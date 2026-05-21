@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../auth_service.dart';
 import 'dart:io' show Platform;
 
 /// Centralized WebSocket service for PANOR real-time communication.
@@ -45,8 +45,7 @@ class WebSocketService extends ChangeNotifier {
   Future<void> connect() async {
     if (_isConnected) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
+    final token = await AuthService.getToken();
     if (token == null || token.isEmpty) {
       debugPrint('[WebSocketService] No JWT token found — skipping WS connect.');
       return;

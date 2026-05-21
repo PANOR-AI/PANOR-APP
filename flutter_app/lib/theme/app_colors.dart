@@ -12,6 +12,8 @@ class AppColors {
   static const Color brandPurple = Color(0xFF7C3AED);
   static const Color brandBlue = Color(0xFF3B82F6);
   static const Color brandViolet = Color(0xFF8B5CF6);
+  static const Color primary = Color(0xFF00D4FF);
+  static const Color secondary = Color(0xFF7C3AED);
 
   // ─── Surface & Background ─────────────────────────────────────
   static const Color background = Color(0xFF070913); // Deep dark space-black background
@@ -24,6 +26,7 @@ class AppColors {
   static const Color textPrimary = Color(0xFFFFFFFF); // Clean high-contrast white text
   static const Color textSecondary = Color(0xFF8C9BBE); // Futuristic slate-blue text
   static const Color textMuted = Color(0xFF5D6C8F);
+  static const Color textTertiary = Color(0xFF5D6C8F);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textOnDark = Color(0xFFFFFFFF);
 
