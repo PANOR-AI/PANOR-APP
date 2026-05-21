@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../widgets/custom_buttons.dart';
+import '../../theme/app_colors.dart';
 import '../../core/providers/auth_provider.dart';
 import 'forgot_password_screen.dart';
 import 'otp_verification_screen.dart';
 import 'biometric_pin_screen.dart';
-import 'dashboard_selection_screen.dart';
 import '../patient/patient_home_screen.dart';
 import '../doctor/doctor_home_screen.dart';
 import '../admin/admin_home_screen.dart';
@@ -39,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Identifier and Password are required"),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.emergencyRed,
         ),
       );
       return;
@@ -82,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => dest), (r) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProv.errorMessage ?? "Login failed"), backgroundColor: Colors.red),
+        SnackBar(content: Text(authProv.errorMessage ?? "Login failed"), backgroundColor: AppColors.emergencyRed),
       );
     }
   }
@@ -90,10 +89,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAFAFA),
-        leading: const BackButton(color: Colors.black),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -101,21 +104,40 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: widget.color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: widget.color.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  widget.role.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: widget.color,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
-                'Login',
-                style: GoogleFonts.inter(
+                'Access Portal',
+                style: GoogleFonts.outfit(
                   fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0A1628),
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Welcome back, ${widget.role}',
+                'Enter your credentials to securely access the PANOR intelligence network.',
                 style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: const Color(0xFF64748B),
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
                 ),
               ),
               const SizedBox(height: 40),
@@ -124,39 +146,57 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _identifierController,
                 keyboardType: widget.isPhoneMode ? TextInputType.phone : TextInputType.emailAddress,
+                style: GoogleFonts.inter(color: Colors.white),
                 decoration: InputDecoration(
-                  labelText: widget.isPhoneMode ? 'Phone Number' : 'Email Address',
-                  hintText: widget.isPhoneMode ? '+1234567890' : '${widget.role.toLowerCase()}@panor.com',
+                  labelText: widget.isPhoneMode ? 'Mobile Number' : 'Operational Email',
+                  labelStyle: GoogleFonts.inter(color: AppColors.textMuted),
+                  hintText: widget.isPhoneMode ? '+92 3XX XXXXXXX' : '${widget.role.toLowerCase()}@panor.pk',
+                  hintStyle: GoogleFonts.inter(color: AppColors.textMuted.withValues(alpha: 0.5)),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: const BorderSide(color: AppColors.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: widget.color, width: 2),
+                  ),
+                  prefixIcon: Icon(
+                    widget.isPhoneMode ? Icons.phone_android_rounded : Icons.email_rounded,
+                    color: AppColors.textMuted,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               if (!widget.isPhoneMode) ...[
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
+                  style: GoogleFonts.inter(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: 'Secure Passphrase',
+                    labelStyle: GoogleFonts.inter(color: AppColors.textMuted),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: widget.color, width: 2),
+                    ),
+                    prefixIcon: const Icon(Icons.lock_rounded, color: AppColors.textMuted),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -172,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text(
-                      'Forgot Password?',
+                      'Forgot Passphrase?',
                       style: GoogleFonts.inter(
                         color: widget.color,
                         fontWeight: FontWeight.w600,
@@ -183,14 +223,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
               
               _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : PrimaryButton(
-                      text: widget.isPhoneMode ? 'Verify Phone' : 'Login',
-                      color: widget.color,
-                      onPressed: _login,
+                  ? Center(child: CircularProgressIndicator(color: widget.color))
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: widget.color,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          widget.isPhoneMode ? 'Send Verification OTP' : 'Authorize & Enter',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
 
               const SizedBox(height: 24),
@@ -214,9 +271,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text(
-                      'Or Authorize using PIN',
+                      'Or Authorize using secure PIN',
                       style: GoogleFonts.inter(
-                        color: const Color(0xFF64748B),
+                        color: AppColors.textMuted,
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                         decoration: TextDecoration.underline,

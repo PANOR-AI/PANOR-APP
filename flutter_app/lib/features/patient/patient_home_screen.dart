@@ -1,18 +1,10 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import '../../theme/app_colors.dart';
-import '../../widgets/custom_buttons.dart';
-import '../../widgets/role_switcher.dart';
-import '../../widgets/emergency_banner.dart';
 import '../../core/auth_service.dart';
-import '../../core/constants/app_constants.dart';
 import 'voice_input_screen.dart';
 import 'upload_report_screen.dart';
-import 'ai_assistant_screen.dart';
-import 'patient_timeline_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   const PatientHomeScreen({super.key});

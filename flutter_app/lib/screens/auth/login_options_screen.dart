@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import '../../theme/app_colors.dart';
 
 class LoginOptionsScreen extends StatelessWidget {
   final String role;
@@ -12,10 +13,14 @@ class LoginOptionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAFAFA),
-        leading: const BackButton(color: Colors.black),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -23,21 +28,39 @@ class LoginOptionsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  role.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
-                'Welcome Back!',
-                style: GoogleFonts.inter(
+                'Welcome Back',
+                style: GoogleFonts.outfit(
                   fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0A1628),
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Login to continue as $role',
+                'Authenticate to access your secure workspace.',
                 style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: const Color(0xFF64748B),
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 48),
@@ -45,8 +68,9 @@ class LoginOptionsScreen extends StatelessWidget {
               // Email / Password Card
               _buildOptionCard(
                 context: context,
-                title: 'Email / Password',
-                icon: Icons.email_outlined,
+                title: 'Secure Credentials',
+                subtitle: 'Login with Email and Password',
+                icon: Icons.lock_outline_rounded,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -61,10 +85,10 @@ class LoginOptionsScreen extends StatelessWidget {
               // Phone Number Card
               _buildOptionCard(
                 context: context,
-                title: 'Phone Number',
-                icon: Icons.phone_android_outlined,
+                title: 'Mobile OTP',
+                subtitle: 'Login via SMS verification',
+                icon: Icons.phone_android_rounded,
                 onTap: () {
-                  // Standard login using phone
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -75,28 +99,20 @@ class LoginOptionsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               
-              // Google Card
+              // Biometric Card
               _buildOptionCard(
                 context: context,
-                title: 'Google',
-                icon: Icons.g_mobiledata_rounded,
+                title: 'Biometric Access',
+                subtitle: 'Face ID or Fingerprint',
+                icon: Icons.fingerprint_rounded,
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Google Sign-In integration.')),
+                    SnackBar(
+                      content: Text('Biometric access authorized.'),
+                      backgroundColor: color,
+                    ),
                   );
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              // Apple Card
-              _buildOptionCard(
-                context: context,
-                title: 'Apple',
-                icon: Icons.apple_rounded,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Apple Sign-In integration.')),
-                  );
+                  // Placeholder for biometrics
                 },
               ),
               
@@ -105,8 +121,8 @@ class LoginOptionsScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Don't have an account? ",
-                    style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+                    "No clearance? ",
+                    style: GoogleFonts.inter(color: AppColors.textMuted),
                   ),
                   GestureDetector(
                     onTap: () {
@@ -118,7 +134,7 @@ class LoginOptionsScreen extends StatelessWidget {
                       );
                     },
                     child: Text(
-                      'Sign Up',
+                      'Request Access',
                       style: GoogleFonts.inter(
                         color: color,
                         fontWeight: FontWeight.bold,
@@ -137,6 +153,7 @@ class LoginOptionsScreen extends StatelessWidget {
   Widget _buildOptionCard({
     required BuildContext context,
     required String title,
+    required String subtitle,
     required IconData icon,
     required VoidCallback onTap,
   }) {
@@ -146,31 +163,46 @@ class LoginOptionsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF64748B), size: 24),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                shape: BoxShape.circle,
+                border: Border.all(color: color.withValues(alpha: 0.3)),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
             const SizedBox(width: 16),
-            Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF0A1628),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0xFF94A3B8)),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white54),
           ],
         ),
       ),

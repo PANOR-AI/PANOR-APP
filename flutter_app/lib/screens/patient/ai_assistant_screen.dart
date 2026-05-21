@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/ai_provider.dart';
+import '../../theme/app_colors.dart';
 
 class AIAssistantScreen extends StatefulWidget {
   const AIAssistantScreen({super.key});
@@ -45,24 +46,30 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     final aiProv = Provider.of<AIProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Clinical AI Co-Pilot',
-              style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF0A1628)),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
             ),
             Text(
               'Powered by Google Antigravity',
-              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF0066FF), fontWeight: FontWeight.bold),
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.patientPrimary, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF64748B)),
+            icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
             onPressed: () => aiProv.clearConversation(),
           )
         ],
@@ -102,7 +109,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 child: SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0066FF))),
+                  child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(AppColors.patientPrimary)),
                 ),
               ),
             ),
@@ -111,8 +118,8 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+              color: AppColors.surface,
+              border: Border(top: BorderSide(color: AppColors.border)),
             ),
             child: SafeArea(
               child: Row(
@@ -122,27 +129,40 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       controller: _msgCtrl,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
+                      style: GoogleFonts.inter(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'Enter clinical complaints or ask a question...',
+                        hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
                         filled: true,
-                        fillColor: const Color(0xFFFAFAFA),
+                        fillColor: AppColors.background,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: const BorderSide(color: AppColors.patientPrimary, width: 1.5),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF0066FF),
+                      gradient: AppColors.patientGradient,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.patientPrimary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.send_rounded, color: Colors.white),
@@ -160,8 +180,8 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -169,20 +189,39 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0066FF).withValues(alpha: 0.05),
+                gradient: AppColors.patientGradient,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.patientPrimary.withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-              child: const Icon(Icons.psychology_outlined, size: 64, color: Color(0xFF0066FF)),
+              child: const Icon(Icons.psychology_outlined, size: 64, color: Colors.white),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               'How are you feeling today?',
-              style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               'Describe your symptoms in detail below. Our multi-agent clinical co-pilot will perform structured diagnostic reasoning, drug-safety check, lab analysis, and generate a formal SOAP note.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B), height: 1.5),
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
+            ),
+            const SizedBox(height: 24),
+            // Quick-start suggestion chips
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                _buildSuggestionChip("Severe migraine and nausea since morning"),
+                _buildSuggestionChip("Mild chest pain and shortness of breath"),
+                _buildSuggestionChip("Persistent fever and dry cough for 3 days"),
+              ],
             ),
           ],
         ),
@@ -190,23 +229,45 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     );
   }
 
+  Widget _buildSuggestionChip(String text) {
+    return ActionChip(
+      label: Text(
+        text,
+        style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: 12),
+      ),
+      backgroundColor: AppColors.surface,
+      side: const BorderSide(color: AppColors.border),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      onPressed: () {
+        _msgCtrl.text = text;
+      },
+    );
+  }
+
   Widget _buildChatBubble(String text, bool isUser) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: isUser ? const Color(0xFF0066FF) : Colors.white,
+        gradient: isUser ? AppColors.patientGradient : null,
+        color: isUser ? null : AppColors.surface,
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),
           bottomLeft: Radius.circular(isUser ? 16 : 0),
           bottomRight: Radius.circular(isUser ? 0 : 16),
         ),
-        border: isUser ? null : Border.all(color: const Color(0xFFE2E8F0)),
+        border: isUser ? null : Border.all(color: AppColors.border),
         boxShadow: isUser
-            ? []
+            ? [
+                BoxShadow(
+                  color: AppColors.patientPrimary.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                )
+              ]
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.01),
+                  color: Colors.black.withOpacity(0.2),
                   blurRadius: 5,
                   offset: const Offset(0, 2),
                 )
@@ -216,7 +277,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
         text,
         style: GoogleFonts.inter(
           fontSize: 15,
-          color: isUser ? Colors.white : const Color(0xFF0A1628),
+          color: Colors.white,
           height: 1.4,
         ),
       ),
@@ -234,24 +295,24 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.fact_check_outlined, color: Color(0xFF0066FF), size: 22),
+              const Icon(Icons.fact_check_outlined, color: AppColors.patientPrimary, size: 22),
               const SizedBox(width: 8),
               Text(
                 'Clinical SOAP Outcomes',
-                style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ],
           ),
-          const Divider(height: 24, color: Color(0xFFF1F5F9)),
+          const Divider(height: 24, color: AppColors.border),
           
           if (soap.isNotEmpty) ...[
             _buildSOAPSection('Subjective Complaint', soap['subjective']?.toString() ?? 'N/A'),
@@ -261,40 +322,86 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
           ],
 
           if (prescriptions.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Medication Instructions',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.medication_outlined, color: AppColors.success, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  'Medication Instructions',
+                  style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            ...prescriptions.map((m) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text('- $m', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+            const SizedBox(height: 8),
+            ...prescriptions.map((m) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline, color: AppColors.success, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          m,
+                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
                 )),
           ],
 
           if (recommendedLabs.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Required Laboratory Tests',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.science_outlined, color: AppColors.brandBlue, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  'Required Laboratory Tests',
+                  style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            ...recommendedLabs.map((l) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text('- $l', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+            const SizedBox(height: 8),
+            ...recommendedLabs.map((l) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.biotech, color: AppColors.brandBlue, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l,
+                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
                 )),
           ],
 
-          const Divider(height: 32, color: Color(0xFFF1F5F9)),
+          const Divider(height: 32, color: AppColors.border),
 
           Row(
             children: [
-              const Icon(Icons.analytics_outlined, color: Color(0xFF0066FF), size: 20),
+              const Icon(Icons.analytics_outlined, color: AppColors.patientPrimary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Sequential Agent Reasoning Traces',
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ],
           ),
@@ -303,7 +410,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
           if (traces.isEmpty)
             Text(
               'No records available',
-              style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+              style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 13),
             )
           else
             ListView.separated(
@@ -316,46 +423,78 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 final double confidence = (tr['confidence'] as num? ?? 1.0).toDouble();
                 final percentage = (confidence * 100).toInt();
 
-                return ExpansionTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        tr['agent']?.toString() ?? 'Clinical Agent',
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0A1628)),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0066FF).withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    dividerColor: Colors.transparent,
+                    unselectedWidgetColor: AppColors.textSecondary,
+                  ),
+                  child: ExpansionTile(
+                    backgroundColor: AppColors.surfaceVariant,
+                    collapsedBackgroundColor: AppColors.surfaceVariant,
+                    textColor: Colors.white,
+                    collapsedTextColor: AppColors.textSecondary,
+                    iconColor: AppColors.patientPrimary,
+                    collapsedIconColor: AppColors.textSecondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.border),
+                    ),
+                    collapsedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.border),
+                    ),
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          tr['agent']?.toString() ?? 'Clinical Agent',
+                          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
                         ),
-                        child: Text(
-                          '$percentage% Conf.',
-                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF0066FF)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.patientPrimary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.patientPrimary.withOpacity(0.2)),
+                          ),
+                          child: Text(
+                            '$percentage% Conf.',
+                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.patientAccent),
+                          ),
+                        ),
+                      ],
+                    ),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Reasoning Steps:',
+                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            const SizedBox(height: 6),
+                            ...((tr['reasoning'] as List? ?? []).map((step) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4.0),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('• ', style: TextStyle(color: AppColors.patientAccent)),
+                                      Expanded(
+                                        child: Text(
+                                          step,
+                                          style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ))),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Reasoning Steps:',
-                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
-                          ),
-                          const SizedBox(height: 4),
-                          ...((tr['reasoning'] as List? ?? []).map((step) => Padding(
-                                padding: const EdgeInsets.only(bottom: 2.0),
-                                child: Text('- $step', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
-                              ))),
-                        ],
-                      ),
-                    ),
-                  ],
                 );
               },
             ),
@@ -372,15 +511,16 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
         children: [
           Text(
             title,
-            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           const SizedBox(height: 4),
           Text(
             val,
-            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B), height: 1.4),
+            style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
           ),
         ],
       ),
     );
   }
 }
+

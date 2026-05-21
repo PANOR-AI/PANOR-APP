@@ -11,6 +11,7 @@ import 'core/providers/notification_provider.dart';
 import 'core/providers/appointment_provider.dart';
 import 'core/services/websocket_service.dart';
 import 'screens/auth/splash_screen.dart';
+import 'theme/app_colors.dart';
 
 void main() {
   runApp(
@@ -59,20 +60,23 @@ class _PanorAppState extends State<PanorApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0066FF),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: AppColors.background,
+        colorScheme: ColorScheme.dark(
           primary: const Color(0xFF0066FF),
-          background: const Color(0xFFFAFAFA),
+          surface: AppColors.surface,
         ),
         textTheme: GoogleFonts.interTextTheme(
-          Theme.of(context).textTheme,
+          ThemeData.dark().textTheme,
+        ).apply(
+          bodyColor: AppColors.textPrimary,
+          displayColor: AppColors.textPrimary,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.background,
           elevation: 0,
           scrolledUnderElevation: 0,
-          iconTheme: IconThemeData(color: Colors.black),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
       ),
       home: SplashScreen(),

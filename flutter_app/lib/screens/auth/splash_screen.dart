@@ -7,6 +7,7 @@ import 'onboarding_screen.dart';
 import '../patient/patient_home_screen.dart';
 import '../doctor/doctor_home_screen.dart';
 import '../admin/admin_home_screen.dart';
+import '../../theme/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -25,12 +26,12 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _animCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1500),
     );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut);
     _animCtrl.forward();
 
-    Timer(const Duration(seconds: 2), _navigate);
+    Timer(const Duration(seconds: 3), _navigate);
   }
 
   Future<void> _navigate() async {
@@ -68,64 +69,78 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      body: FadeTransition(
-        opacity: _fadeAnim,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Glowing clinical logo
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF0066FF).withValues(alpha: 0.08),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0066FF).withValues(alpha: 0.15),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                    )
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.splashGradient,
+        ),
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Glowing clinical logo
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.brandBlue.withValues(alpha: 0.3),
+                            blurRadius: 60,
+                            spreadRadius: 20,
+                          ),
+                          BoxShadow(
+                            color: AppColors.brandPurple.withValues(alpha: 0.2),
+                            blurRadius: 100,
+                            spreadRadius: 40,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.health_and_safety_rounded,
+                      size: 100,
+                      color: Colors.white,
+                    ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.health_and_safety_rounded,
-                  size: 80,
-                  color: Color(0xFF0066FF),
+                const SizedBox(height: 40),
+                Text(
+                  'PANOR',
+                  style: GoogleFonts.outfit(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 8,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'PANOR',
-                style: GoogleFonts.inter(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF0A1628),
-                  letterSpacing: 6,
+                const SizedBox(height: 12),
+                Text(
+                  'YOUR HEALTH. OUR INTELLIGENCE',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.brandBlue,
+                    letterSpacing: 2,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Patient-Augmented Network\nfor Operational Reasoning',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF64748B),
-                  height: 1.5,
+                const SizedBox(height: 60),
+                const SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandViolet),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 48),
-              const SizedBox(
-                width: 32,
-                height: 32,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0066FF)),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

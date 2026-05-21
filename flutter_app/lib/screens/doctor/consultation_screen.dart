@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/ai_provider.dart';
+import '../../theme/app_colors.dart';
 
 class ConsultationScreen extends StatefulWidget {
   const ConsultationScreen({super.key});
@@ -33,11 +34,17 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     final consultation = aiProv.latestConsultation;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           'Clinical SOAP Consultation',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
         ),
       ),
       body: SingleChildScrollView(
@@ -47,49 +54,62 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           children: [
             Text(
               'Patient Clinical History & Complaints',
-              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextField(
               controller: _complaintCtrl,
               maxLines: 5,
+              style: GoogleFonts.inter(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Enter complete objective narratives, somatic pain locations, durations, and vitals updates...',
+                hintStyle: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: const BorderSide(color: AppColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: AppColors.doctorPrimary, width: 1.5),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00C853),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.doctorGradient,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppColors.primaryButtonShadow(AppColors.doctorPrimary),
                 ),
-                onPressed: aiProv.isLoading ? null : _runConsultation,
-                icon: aiProv.isLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
-                      )
-                    : const Icon(Icons.psychology),
-                label: Text(
-                  aiProv.isLoading ? 'Antigravity Reasoning Active...' : 'Generate SOAP differential',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15),
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: aiProv.isLoading ? null : _runConsultation,
+                  icon: aiProv.isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                        )
+                      : const Icon(Icons.psychology, color: Colors.white),
+                  label: Text(
+                    aiProv.isLoading ? 'Antigravity Reasoning Active...' : 'Generate SOAP Differential',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                  ),
                 ),
               ),
             ),
@@ -100,10 +120,17 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             ] else ...[
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Text(
-                    'No consultation outcomes generated yet.',
-                    style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 60),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.assignment_outlined, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No consultation outcomes generated yet.',
+                        style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 14),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -124,24 +151,24 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.analytics_outlined, color: Color(0xFF00C853), size: 22),
+              const Icon(Icons.analytics_outlined, color: AppColors.doctorAccent, size: 22),
               const SizedBox(width: 8),
               Text(
                 'Antigravity Consultation Output',
-                style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ],
           ),
-          const Divider(height: 24, color: Color(0xFFF1F5F9)),
+          const Divider(height: 24, color: AppColors.border),
 
           if (soap.isNotEmpty) ...[
             _soapItem('Subjective Summary', soap['subjective']?.toString() ?? 'N/A'),
@@ -151,36 +178,82 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ],
 
           if (prescriptions.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Prescriptions Approved:',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.medication_outlined, color: AppColors.success, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  'Prescriptions Approved:',
+                  style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            ...prescriptions.map((m) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text('- $m', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+            const SizedBox(height: 8),
+            ...prescriptions.map((m) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline, color: AppColors.success, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          m,
+                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
                 )),
           ],
 
           if (recommendedLabs.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Recommended Lab Work:',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.biotech_outlined, color: AppColors.doctorAccent, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  'Recommended Lab Work:',
+                  style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            ...recommendedLabs.map((l) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text('- $l', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+            const SizedBox(height: 8),
+            ...recommendedLabs.map((l) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.science_outlined, color: AppColors.doctorAccent, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l,
+                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
                 )),
           ],
 
-          const Divider(height: 32, color: Color(0xFFF1F5F9)),
+          const Divider(height: 32, color: AppColors.border),
 
           Text(
             'Google Antigravity Traces Logs',
-            style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628)),
+            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           const SizedBox(height: 12),
           ListView.separated(
@@ -193,33 +266,78 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               final double confidence = (tr['confidence'] as num? ?? 1.0).toDouble();
               final percentage = (confidence * 100).toInt();
 
-              return ExpansionTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                  unselectedWidgetColor: AppColors.textSecondary,
+                ),
+                child: ExpansionTile(
+                  backgroundColor: AppColors.surfaceVariant,
+                  collapsedBackgroundColor: AppColors.surfaceVariant,
+                  textColor: Colors.white,
+                  collapsedTextColor: AppColors.textSecondary,
+                  iconColor: AppColors.doctorAccent,
+                  collapsedIconColor: AppColors.textSecondary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: AppColors.border),
+                  ),
+                  collapsedShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: AppColors.border),
+                  ),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        tr['agent']?.toString() ?? 'Agent',
+                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.doctorAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.doctorAccent.withOpacity(0.2)),
+                        ),
+                        child: Text(
+                          '$percentage% Conf.',
+                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.doctorAccent, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
                   children: [
-                    Text(
-                      tr['agent']?.toString() ?? 'Agent',
-                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0A1628)),
-                    ),
-                    Text(
-                      '$percentage% confidence',
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF00C853), fontWeight: FontWeight.bold),
-                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Reasoning Steps:',
+                            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          const SizedBox(height: 6),
+                          ...((tr['reasoning'] as List? ?? []).map((step) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('• ', style: TextStyle(color: AppColors.doctorAccent)),
+                                    Expanded(
+                                      child: Text(
+                                        step,
+                                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ))),
+                        ],
+                      ),
+                    )
                   ],
                 ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Reasoning Steps:', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        ...((tr['reasoning'] as List? ?? []).map((e) => Text('- $e', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))))),
-                      ],
-                    ),
-                  )
-                ],
               );
             },
           ),
@@ -234,9 +352,15 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF0A1628))),
+          Text(
+            title,
+            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
           const SizedBox(height: 4),
-          Text(val, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B), height: 1.4)),
+          Text(
+            val,
+            style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+          ),
         ],
       ),
     );
