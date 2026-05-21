@@ -3,9 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/providers/auth_provider.dart';
-import '../auth/role_selection_screen.dart';
-import 'audit_logs_screen.dart';
 import 'user_management_screen.dart';
+import 'epidemiology_screen.dart';
+import 'audit_logs_screen.dart';
+import 'analytics_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -14,39 +15,24 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  static const Color darkBg = Color(0xFF0A0E1A);
+  static const Color cardBg = Color(0xFF131929);
+  static const Color borderColor = Color(0xFF1E2A3A);
+  static const Color textPrimary = Colors.white;
+  static const Color textSecondary = Color(0xFF8892A4);
+  static const Color adminPurple = Color(0xFF8B5CF6);
+  static const Color emergencyRed = Color(0xFFEF4444);
+  static const Color successGreen = Color(0xFF10B981);
+  static const Color warningAmber = Color(0xFFF59E0B);
+  static const Color primaryBlue = Color(0xFF3B82F6);
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-
-    // Proactively fetch all admin stats at initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final prov = Provider.of<AdminProvider>(context, listen: false);
-      prov.fetchAdminDashboard(forceRefresh: true);
-      prov.fetchAnalytics();
-      prov.fetchSystemMetrics();
-      prov.fetchEpidemiology();
+      Provider.of<AdminProvider>(context, listen: false).fetchAdminDashboard();
     });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _refreshAll() async {
-    final prov = Provider.of<AdminProvider>(context, listen: false);
-    await Future.wait([
-      prov.fetchAdminDashboard(forceRefresh: true),
-      prov.fetchAnalytics(),
-      prov.fetchSystemMetrics(),
-      prov.fetchEpidemiology(),
-    ]);
   }
 
   @override
@@ -55,809 +41,333 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     final authProv = Provider.of<AuthProvider>(context);
 
     final user = authProv.userProfile;
-    final fullName = user != null
-        ? user['full_name'] as String? ?? 'Administrator'
-        : 'Administrator';
+    final adminName =
+        user != null ? user['full_name'] as String? ?? 'Administrator' : 'Administrator';
+
     final dash = adminProv.dashboardData;
-
-    // Overview tab metrics
-    final metrics = dash != null ? dash['data'] as Map? ?? {} : {};
-    final totalUsers = metrics['total_users'] ?? 0;
-    final patientsCount = metrics['patients'] ?? 0;
-    final doctorsCount = metrics['doctors'] ?? 0;
-    final activeSessions = metrics['active_sessions'] ?? 0;
-    final auditSummary = metrics['audit_summary'] as List? ?? [];
-
-    const royalPurple = Color(0xFF7C3AED);
+    final totalUsers = dash != null ? dash['total_users'] as int? ?? 0 : 0;
+    final totalPatients = dash != null ? dash['patients'] as int? ?? 0 : 0;
+    final totalDoctors = dash != null ? dash['doctors'] as int? ?? 0 : 0;
+    final totalLabs = dash != null ? dash['laboratories'] as int? ?? 0 : 0;
+    final appointmentsToday =
+        dash != null ? dash['appointments_today'] as int? ?? 0 : 0;
+    final activeSessions =
+        dash != null ? dash['active_sessions'] as int? ?? 0 : 0;
+    final systemActivity =
+        dash != null ? dash['system_activity'] as List? ?? [] : [];
+    final auditSummary =
+        dash != null ? dash['audit_summary'] as List? ?? [] : [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: royalPurple.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.dashboard_customize_outlined,
-                  color: royalPurple, size: 24),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'PANOR CommandCenter',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w900,
-                color: royalPurple,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Color(0xFF64748B)),
-            onPressed: () async {
-              await authProv.logout();
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const RoleSelectionScreen()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-          const SizedBox(width: 16),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: royalPurple,
-          unselectedLabelColor: const Color(0xFF64748B),
-          indicatorColor: royalPurple,
-          indicatorWeight: 3,
-          labelStyle:
-              GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: const [
-            Tab(
-                text: 'Overview',
-                icon: Icon(Icons.analytics_outlined, size: 20)),
-            Tab(
-                text: 'Analytics',
-                icon: Icon(Icons.bar_chart_rounded, size: 20)),
-            Tab(
-                text: 'System Health',
-                icon: Icon(Icons.dns_outlined, size: 20)),
-            Tab(
-                text: 'Epidemiology',
-                icon: Icon(Icons.bug_report_outlined, size: 20)),
-          ],
-        ),
-      ),
+      backgroundColor: darkBg,
       body: adminProv.isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation(royalPurple)))
+                valueColor: AlwaysStoppedAnimation<Color>(adminPurple),
+                strokeWidth: 2.5,
+              ),
+            )
           : RefreshIndicator(
-              onRefresh: _refreshAll,
-              color: royalPurple,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // TAB 1: Overview
-                  _buildOverviewTab(context, fullName, totalUsers, patientsCount,
-                      doctorsCount, activeSessions, auditSummary, royalPurple),
-
-                  // TAB 2: Analytics
-                  _buildAnalyticsTab(context, adminProv.analytics, royalPurple),
-
-                  // TAB 3: System Metrics
-                  _buildSystemHealthTab(
-                      context, adminProv.systemMetrics, royalPurple),
-
-                  // TAB 4: Epidemiology
-                  _buildEpidemiologyTab(
-                      context, adminProv.epidemiology, royalPurple),
-                ],
-              ),
-            ),
-    );
-  }
-
-  // ── TAB 1: Overview ────────────────────────────────────────────────────────
-  Widget _buildOverviewTab(
-    BuildContext context,
-    String fullName,
-    dynamic totalUsers,
-    dynamic patients,
-    dynamic doctors,
-    dynamic sessions,
-    List<dynamic> logs,
-    Color themeColor,
-  ) {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Platform banner
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [themeColor, themeColor.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome, $fullName',
-                  style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Unified national healthcare operational command center. Operational status active.',
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 28),
-
-          Text(
-            'Core Infrastructure Metrics',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-
-          // Metrics list
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            childAspectRatio: 1.6,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            children: [
-              _buildMetricCard('Total Users', '$totalUsers',
-                  Icons.group_outlined, themeColor),
-              _buildMetricCard('Registered Patients', '$patients',
-                  Icons.personal_injury_outlined, const Color(0xFF0066FF)),
-              _buildMetricCard('Active Doctors', '$doctors',
-                  Icons.medical_services_outlined, const Color(0xFF00C853)),
-              _buildMetricCard('Active Sessions', '$sessions',
-                  Icons.online_prediction_outlined, Colors.amber),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // Shortcut Actions
-          Text(
-            'Quick Shortcuts',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildActionShortcut(context, 'User Management',
-                  Icons.manage_accounts_outlined, themeColor, () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const UserManagementScreen()));
-              }),
-              const SizedBox(width: 16),
-              _buildActionShortcut(context, 'Audit Logs',
-                  Icons.admin_panel_settings_outlined, Colors.blueGrey, () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const AuditLogsScreen()));
-              }),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // Audit Overview Logs
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recent Audit Overview',
-                style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0F172A)),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const AuditLogsScreen()));
-                },
-                child: Text('See All',
-                    style: TextStyle(
-                        color: themeColor, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (logs.isEmpty)
-            _buildEmptyState('No audit event logs recorded')
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: logs.length > 5 ? 5 : logs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final log = logs[index] as Map;
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.blueGrey.withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
+              onRefresh: () async =>
+                  adminProv.fetchAdminDashboard(forceRefresh: true),
+              color: adminPurple,
+              backgroundColor: cardBg,
+              child: CustomScrollView(
+                slivers: [
+                  // Header
+                  SliverAppBar(
+                    pinned: true,
+                    floating: false,
+                    expandedHeight: 210,
+                    backgroundColor: darkBg,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF16082B), Color(0xFF0A0E1A)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
                         ),
-                        child: const Icon(Icons.lock_person_outlined,
-                            color: Colors.blueGrey, size: 20),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              log['action']?.toString() ?? 'Action',
-                              style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF0F172A)),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'By: ${log['user_name']} • ${log['details']}',
-                              style: GoogleFonts.inter(
-                                  fontSize: 12, color: const Color(0xFF64748B)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ── TAB 2: Analytics ───────────────────────────────────────────────────────
-  Widget _buildAnalyticsTab(
-      BuildContext context, Map<String, dynamic>? analytics, Color themeColor) {
-    if (analytics == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final userGrowth = analytics['user_growth'] as List? ?? [];
-    final apptTrends = analytics['appointment_trends'] as List? ?? [];
-    final topDiagnoses = analytics['top_diagnoses'] as List? ?? [];
-    final stats = analytics['consultation_statistics'] as Map? ?? {};
-
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Growth Graph section
-          Text(
-            'User Growth Trends',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          _buildBarChart(userGrowth, themeColor),
-          const SizedBox(height: 32),
-
-          // Appointment Trends
-          Text(
-            'Appointment Volume Trends',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          _buildBarChart(apptTrends, const Color(0xFF0066FF)),
-          const SizedBox(height: 32),
-
-          // Top Diagnoses distribution list
-          Text(
-            'Top Diagnosed Conditions Distribution',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              children: topDiagnoses.map<Widget>((item) {
-                final condition = item['condition']?.toString() ?? 'N/A';
-                final count = item['count'] ?? 0;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(condition,
-                          style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0F172A))),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: themeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '$count cases',
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: themeColor),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // Consultation Statistics Summary
-          Text(
-            'Consultation Statistics',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildStatSummaryItem('Completed', '${stats['completed'] ?? 0}',
-                    const Color(0xFF00C853)),
-                _buildStatSummaryItem('Scheduled', '${stats['scheduled'] ?? 0}',
-                    const Color(0xFF0066FF)),
-                _buildStatSummaryItem('Cancelled', '${stats['cancelled'] ?? 0}',
-                    Colors.redAccent),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── TAB 3: System Health ───────────────────────────────────────────────────
-  Widget _buildSystemHealthTab(
-      BuildContext context, Map<String, dynamic>? metrics, Color themeColor) {
-    if (metrics == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final uptimeSecs = metrics['uptime_seconds'] as int? ?? 0;
-    final uptimeHrs = uptimeSecs ~/ 3600;
-    final uptimeMins = (uptimeSecs % 3600) ~/ 60;
-
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Health Indicator
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF00C853).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: const Color(0xFF00C853).withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.check_circle_outline_rounded,
-                    color: Color(0xFF00C853), size: 28),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'All Systems Operational',
-                        style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF0F172A)),
-                      ),
-                      Text(
-                        'Database status: ${metrics['database_status']} • API Uptime: $uptimeHrs hrs $uptimeMins mins',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: const Color(0xFF64748B)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 28),
-
-          Text(
-            'Compute & DB Health Indicators',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            childAspectRatio: 1.5,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            children: [
-              _buildVitalHealthMetric(
-                  'CPU Usage',
-                  '${metrics['cpu_usage_pct']}%',
-                  Icons.developer_board_outlined,
-                  Colors.amber),
-              _buildVitalHealthMetric(
-                  'Memory Allocated',
-                  '${metrics['memory_usage_mb']} MB',
-                  Icons.memory_outlined,
-                  const Color(0xFF0066FF)),
-              _buildVitalHealthMetric(
-                  'DB Active Connections',
-                  '${metrics['active_connections']}',
-                  Icons.hub_outlined,
-                  themeColor),
-              _buildVitalHealthMetric(
-                  'API Latency',
-                  '${metrics['api_response_time_ms']} ms',
-                  Icons.speed_outlined,
-                  const Color(0xFF00C853)),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          Text(
-            'Registered Table Size Summaries',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              children: [
-                _buildTableSizeItem('Users Database Table',
-                    '${metrics['total_users']} rows', themeColor),
-                _buildTableSizeItem(
-                    'Appointments Table',
-                    '${metrics['total_appointments']} rows',
-                    const Color(0xFF0066FF)),
-                _buildTableSizeItem('Audit Logs Table',
-                    '${metrics['total_audit_logs']} rows', Colors.blueGrey),
-                _buildTableSizeItem('Analytics Events Table',
-                    '${metrics['total_analytics_events']} rows', Colors.teal),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── TAB 4: Epidemiology ────────────────────────────────────────────────────
-  Widget _buildEpidemiologyTab(
-      BuildContext context, Map<String, dynamic>? data, Color themeColor) {
-    if (data == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final alertsCount = data['active_alerts'] ?? 0;
-    final totalCases = data['total_monitored_cases'] ?? 0;
-    final alerts = data['alerts'] as List? ?? [];
-    final conditions = data['tracked_conditions'] as List? ?? [];
-
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Epidemiology Status Card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: alertsCount > 0
-                  ? Colors.redAccent.withValues(alpha: 0.08)
-                  : const Color(0xFF00C853).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: alertsCount > 0
-                      ? Colors.redAccent.withValues(alpha: 0.3)
-                      : const Color(0xFF00C853).withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  alertsCount > 0
-                      ? Icons.warning_amber_rounded
-                      : Icons.shield_outlined,
-                  color: alertsCount > 0
-                      ? Colors.redAccent
-                      : const Color(0xFF00C853),
-                  size: 32,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        alertsCount > 0
-                            ? 'Active Epidemiology Alerts!'
-                            : 'Epidemiology Level Normal',
-                        style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF0F172A)),
-                      ),
-                      Text(
-                        'Active alerts: $alertsCount • Tracked cases nationwide: $totalCases',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: const Color(0xFF64748B)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 28),
-
-          // Tracked diseases distribution percentages
-          Text(
-            'Tracked Disease Case Percentages',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              children: conditions.map<Widget>((item) {
-                final condition = item['condition']?.toString() ?? 'N/A';
-                final cases = item['cases'] ?? 0;
-                final percentage = item['percentage'] ?? 0.0;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(condition,
-                              style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF0F172A))),
-                          Text('$cases cases ($percentage%)',
-                              style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: themeColor)),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: percentage / 100.0,
-                          backgroundColor: const Color(0xFFF1F5F9),
-                          valueColor: AlwaysStoppedAnimation(themeColor),
-                          minHeight: 8,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // Epidemiology Alerts Panel
-          Text(
-            'Epidemiology Alerts Panel',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          if (alerts.isEmpty)
-            _buildEmptyState('No active alerts monitored')
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: alerts.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final alert = alerts[index] as Map;
-                final risk =
-                    alert['risk_level']?.toString().toUpperCase() ?? 'GREEN';
-                final isRed = risk == 'RED';
-                final isYellow = risk == 'YELLOW';
-                final riskColor = isRed
-                    ? Colors.redAccent
-                    : (isYellow
-                        ? Colors.orangeAccent
-                        : const Color(0xFF00C853));
-
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: riskColor.withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.coronavirus_outlined,
-                            color: riskColor, size: 24),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
+                        padding: const EdgeInsets.fromLTRB(24, 56, 24, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  alert['condition']?.toString() ?? 'Condition',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF0F172A)),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Icon(
+                                          Icons.admin_panel_settings_rounded,
+                                          color: Colors.white,
+                                          size: 18),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'PANOR',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: adminPurple.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        'ADMIN',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: adminPurple,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: riskColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: cardBg,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: borderColor),
                                   ),
-                                  child: Text(
-                                    risk,
-                                    style: TextStyle(
-                                        color: riskColor,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.settings_rounded,
+                                        color: Colors.white, size: 22),
+                                    onPressed: () {},
                                   ),
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'System Control Room',
+                              style: GoogleFonts.inter(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             Text(
-                              alert['details']?.toString() ?? '',
+                              'Welcome, $adminName — All systems operational',
                               style: GoogleFonts.inter(
-                                  fontSize: 12, color: const Color(0xFF64748B)),
+                                fontSize: 13,
+                                color: adminPurple,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            // System status pill
+                            Row(
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: successGreen,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$activeSessions Active Sessions',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 12, color: successGreen),
+                                ),
+                                const SizedBox(width: 16),
+                                const Icon(Icons.calendar_today_rounded,
+                                    size: 12, color: Color(0xFF8892A4)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$appointmentsToday Today\'s Appointments',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 12, color: textSecondary),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                );
-              },
+
+                  SliverPadding(
+                    padding: const EdgeInsets.all(20),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        // Network stats grid
+                        _sectionHeader('National Health Network'),
+                        const SizedBox(height: 14),
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.5,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          children: [
+                            _buildMetricCard('Total Users', '$totalUsers',
+                                Icons.people_rounded, adminPurple, '+12% MTD'),
+                            _buildMetricCard('Patients', '$totalPatients',
+                                Icons.person_rounded, primaryBlue, 'Active P_IDs'),
+                            _buildMetricCard('Doctors', '$totalDoctors',
+                                Icons.medical_services_rounded, successGreen, 'Verified'),
+                            _buildMetricCard('Labs', '$totalLabs',
+                                Icons.biotech_rounded, warningAmber, 'Accredited'),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Admin Quick Actions
+                        _sectionHeader('System Management'),
+                        const SizedBox(height: 14),
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          childAspectRatio: 2.2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          children: [
+                            _buildAdminAction(
+                              context,
+                              'User Management',
+                              Icons.manage_accounts_rounded,
+                              adminPurple,
+                              () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const UserManagementScreen())),
+                            ),
+                            _buildAdminAction(
+                              context,
+                              'Epidemiology Map',
+                              Icons.map_rounded,
+                              emergencyRed,
+                              () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const EpidemiologyScreen())),
+                            ),
+                            _buildAdminAction(
+                              context,
+                              'Analytics',
+                              Icons.analytics_rounded,
+                              primaryBlue,
+                              () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const AnalyticsScreen())),
+                            ),
+                            _buildAdminAction(
+                              context,
+                              'Audit Logs',
+                              Icons.history_rounded,
+                              successGreen,
+                              () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const AuditLogsScreen())),
+                            ),
+                            _buildAdminAction(
+                              context,
+                              'Pricing Manager',
+                              Icons.price_change_rounded,
+                              warningAmber,
+                              () => _showPricingDialog(context),
+                            ),
+                            _buildAdminAction(
+                              context,
+                              'Welfare Scores',
+                              Icons.shield_rounded,
+                              const Color(0xFF06B6D4),
+                              () => _showWelfareDialog(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+
+                        // System Activity Feed
+                        _sectionHeader('Live System Activity'),
+                        const SizedBox(height: 12),
+                        systemActivity.isEmpty
+                            ? _buildEmptyCard(
+                                'No recent system activity', Icons.timeline_rounded)
+                            : Column(
+                                children: systemActivity
+                                    .take(5)
+                                    .map((a) => _buildActivityItem(a as Map))
+                                    .toList(),
+                              ),
+                        const SizedBox(height: 28),
+
+                        // Audit Summary
+                        _sectionHeader('Security Audit Trail'),
+                        const SizedBox(height: 12),
+                        auditSummary.isEmpty
+                            ? _buildEmptyCard(
+                                'No recent audit events', Icons.security_rounded)
+                            : Column(
+                                children: auditSummary
+                                    .take(4)
+                                    .map((a) => _buildAuditItem(a as Map))
+                                    .toList(),
+                              ),
+
+                        // Welfare Score Engine Banner
+                        const SizedBox(height: 28),
+                        _buildWelfareBanner(),
+
+                        const SizedBox(height: 100),
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
             ),
-        ],
+    );
+  }
+
+  Widget _sectionHeader(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.inter(
+        fontSize: 17,
+        fontWeight: FontWeight.bold,
+        color: textPrimary,
       ),
     );
   }
 
-  // ── Shared Helper Components ───────────────────────────────────────────────
-  Widget _buildMetricCard(
-      String label, String value, IconData icon, Color color) {
+  Widget _buildMetricCard(String label, String value, IconData icon,
+      Color color, String subtitle) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -865,13 +375,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(icon, color: color, size: 20),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(5),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -879,237 +397,340 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           Text(
             value,
             style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: textPrimary,
+            ),
           ),
-          const SizedBox(height: 2),
           Text(
             label,
-            style: GoogleFonts.inter(
-                fontSize: 11,
-                color: const Color(0xFF64748B),
-                fontWeight: FontWeight.w500),
+            style: GoogleFonts.inter(fontSize: 11, color: textSecondary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionShortcut(BuildContext context, String label, IconData icon,
+  Widget _buildAdminAction(BuildContext context, String label, IconData icon,
       Color color, VoidCallback onTap) {
-    return Expanded(
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 18),
             ),
-            child: Row(
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 12, color: Color(0xFF4A5568)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityItem(Map activity) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: successGreen,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F172A)),
+                Text(
+                  activity['action']?.toString() ?? 'System Event',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: textPrimary,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: Color(0xFF64748B)),
+                Text(
+                  activity['timestamp']?.toString() ?? 'Just now',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildVitalHealthMetric(
-      String label, String value, IconData icon, Color color) {
+  Widget _buildAuditItem(Map audit) {
+    final severity = audit['severity']?.toString() ?? 'INFO';
+    Color severityColor;
+    switch (severity.toUpperCase()) {
+      case 'CRITICAL':
+        severityColor = emergencyRed;
+        break;
+      case 'WARNING':
+        severityColor = warningAmber;
+        break;
+      default:
+        severityColor = successGreen;
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: const Color(0xFF64748B),
-                      fontWeight: FontWeight.w500)),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 16),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableSizeItem(String title, String rowCount, Color iconColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(Icons.table_chart_outlined, color: iconColor, size: 18),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0F172A)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: severityColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Text(
+              severity,
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                color: severityColor,
               ),
-            ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  audit['event']?.toString() ?? 'Audit Event',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  audit['user']?.toString() ?? 'System',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
           Text(
-            rowCount,
-            style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF64748B)),
+            audit['time']?.toString() ?? '',
+            style: GoogleFonts.inter(fontSize: 11, color: textSecondary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatSummaryItem(String label, String count, Color color) {
-    return Column(
-      children: [
-        Text(
-          count,
-          style: GoogleFonts.inter(
-              fontSize: 22, fontWeight: FontWeight.bold, color: color),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF64748B)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBarChart(List<dynamic> data, Color barColor) {
-    if (data.isEmpty) {
-      return _buildEmptyState('No tracked data recorded');
-    }
-
-    int maxVal = 1;
-    for (var item in data) {
-      final val = item['count'] as int? ?? 0;
-      if (val > maxVal) maxVal = val;
-    }
-
+  Widget _buildWelfareBanner() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF8B5CF6), Color(0xFF6C63FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: data.map<Widget>((item) {
-          final month = item['month']?.toString() ?? '';
-          final count = item['count'] as int? ?? 0;
-          final pct = count / maxVal;
-          final barHeight = pct * 80 + 10;
-
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                '$count',
-                style: GoogleFonts.inter(
-                    fontSize: 10,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Patient Welfare Engine',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF64748B)),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: 24,
-                height: barHeight,
-                decoration: BoxDecoration(
-                  color: barColor.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(4),
+                    color: Colors.white,
+                  ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'AI-computed social health scores for subsidized care access',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          ElevatedButton(
+            onPressed: () => _showWelfareDialog(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+            child: Text(
+              'Configure',
+              style: GoogleFonts.inter(
+                color: adminPurple,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
               ),
-              const SizedBox(height: 8),
-              Text(
-                month,
-                style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0F172A)),
-              ),
-            ],
-          );
-        }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildEmptyState(String msg) {
+  Widget _buildEmptyCard(String message, IconData icon) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 32),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
       ),
       child: Center(
-        child: Text(
-          msg,
-          style:
-              GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 14),
+        child: Column(
+          children: [
+            Icon(icon, color: const Color(0xFF2A3544), size: 36),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: GoogleFonts.inter(color: textSecondary, fontSize: 13),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _showPricingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Pricing Manager',
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold, color: textPrimary)),
+        content: Text(
+          'Configure lab test pricing, doctor consultation fees, and welfare discounts in the full Pricing Manager module.',
+          style: GoogleFonts.inter(fontSize: 13, color: textSecondary, height: 1.5),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(backgroundColor: adminPurple),
+            child: Text('OK',
+                style: GoogleFonts.inter(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWelfareDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Welfare Score Engine',
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold, color: textPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildWelfareTier('Platinum (80-100)', '100% lab discount', adminPurple),
+            _buildWelfareTier('Gold (60-79)', '50% lab discount', warningAmber),
+            _buildWelfareTier('Silver (40-59)', '25% discount', primaryBlue),
+            _buildWelfareTier('Basic (0-39)', 'Standard pricing', textSecondary),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(backgroundColor: adminPurple),
+            child: Text('Close',
+                style: GoogleFonts.inter(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelfareTier(String tier, String benefit, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              tier,
+              style: GoogleFonts.inter(
+                  fontSize: 13, color: textPrimary, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Text(
+            benefit,
+            style: GoogleFonts.inter(fontSize: 12, color: color),
+          ),
+        ],
       ),
     );
   }
